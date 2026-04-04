@@ -1,0 +1,414 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+/* 역할 스위치 및 모달 관련 추가 CSS (추후 index.css 이동 가능하지만 구조화 위해 인라인 추가) */
+.role-badge {
+    display: inline-flex;
+    background: #e0eaf5;
+    color: var(--primary-color);
+    border: 1px solid #c9def5;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 24px;
+}
+
+.org-tree {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.group-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    padding: 24px;
+}
+.group-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-color);
+}
+.division-section {
+    margin-left: 16px;
+}
+.division-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+.division-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.teams-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+}
+
+.team-card {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 16px;
+    background: #fdfdfd;
+}
+
+.team-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.team-name {
+    font-weight: 600;
+    font-size: 1.05rem;
+}
+.team-leader {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    background: #f0f0f0;
+    padding: 2px 8px;
+    border-radius: 12px;
+}
+
+.members-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.member-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.9rem;
+    padding: 8px;
+    background: white;
+    border: 1px solid #eee;
+    border-radius: 6px;
+}
+.member-info {
+    display: flex;
+    flex-direction: column;
+}
+.member-email {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+/* Modals */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+.modal-overlay.active {
+    display: flex;
+}
+.modal-content {
+    background: white;
+    padding: 24px;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.1);
+}
+.modal-header {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 16px;
+}
+.form-group {
+    margin-bottom: 16px;
+}
+.form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+.form-control {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-family: inherit;
+}
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 24px;
+}
+.btn-secondary {
+    padding: 8px 16px;
+    border: 1px solid var(--border-color);
+    background: white;
+    border-radius: 6px;
+    cursor: pointer;
+}
+.btn-icon-danger {
+    background: none;
+    border: none;
+    color: #da1e28;
+    cursor: pointer;
+    font-size: 0.9rem;
+    padding: 4px;
+    border-radius: 4px;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+.btn-icon-danger:hover {
+    opacity: 1;
+    background: rgba(218, 30, 40, 0.1);
+}
+.inline-form {
+    display: inline-flex;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+}
+</style>
+
+<div style="display:flex; justify-content: space-between; align-items:flex-start;">
+    <h1 class="page-title">{{ title }}</h1>
+    <div class="role-badge">
+        <i class="fa-solid fa-user-shield" style="margin-right: 8px;"></i> 현재 권한: {{ role }}
+    </div>
+</div>
+
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <div style="background: #e6f7eb; color: #198038; padding: 12px; border-radius: 6px; margin-bottom: 16px;">
+        {{ messages[0] }}
+    </div>
+  {% endif %}
+{% endwith %}
+
+<div class="org-tree">
+    {% for group in org_data %}
+    <div class="group-card">
+        <div class="group-title" style="display: flex; align-items: baseline; gap: 12px;">
+            <div><i class="fa-solid fa-building"></i> {{ group.name }}</div>
+            {% if group.leader_name %}
+            <div style="font-size: 0.9rem; font-weight: normal; color: var(--text-secondary);">
+                {{ group.leader_name }} {{ group.leader_position }} 
+                {% if group.leader_email %}<span style="color: var(--text-muted); font-size: 0.8rem;">({{ group.leader_email }})</span>{% endif %}
+            </div>
+            {% endif %}
+        </div>
+        
+        {% for div in group.divisions %}
+        <div class="division-section">
+            <div class="division-header">
+                <div class="division-title" style="display: flex; align-items: baseline; gap: 12px;">
+                    <div><i class="fa-solid fa-sitemap"></i> {{ div.name }}</div>
+                    {% if div.leader_name %}
+                    <div style="font-size: 0.9rem; font-weight: normal; color: var(--text-secondary);">
+                        {{ div.leader_name }} {{ div.leader_position }}
+                        {% if div.leader_email %}<span style="color: var(--text-muted); font-size: 0.8rem;">({{ div.leader_email }})</span>{% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+                <!-- 담당장만 팀 추가 가능 -->
+                {% if role == '담당장' %}
+                <button class="primary-btn" onclick="openModal('addTeamModal', {{ div.id }})">
+                    <i class="fa-solid fa-plus"></i> 팀 추가
+                </button>
+                {% endif %}
+            </div>
+            
+            <div class="teams-grid">
+                {% for team in div.teams %}
+                <div class="team-card">
+                    <div class="team-header">
+                        <div>
+                            <div class="team-name">{{ team.name }}</div>
+                            {% if team.leader_name %}
+                            <div class="team-leader" style="margin-top:4px;">
+                                <i class="fa-solid fa-crown" style="color:var(--primary-color);"></i> 
+                                {{ team.leader_name }} {{ team.leader_position }}
+                                {% if team.leader_email %}<span style="font-size:0.75rem; font-weight:normal;">({{ team.leader_email }})</span>{% endif %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% if role == '담당장' %}
+                        <button type="button" class="btn-icon-danger" title="팀 삭제" onclick="showDeleteConfirm('팀 [{{ team.name }}]과 속한 모든 팀원을 삭제하시겠습니까?', '/api/delete-team/{{ team.id }}')">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="members-list">
+                        {% for member in team.members %}
+                        <div class="member-item">
+                            <div class="member-info">
+                                <span>{{ member.name }} {{ member.position }}</span>
+                                {% if member.email %}
+                                <span class="member-email">{{ member.email }}</span>
+                                {% endif %}
+                            </div>
+                            {% if role in ['담당장', '팀장'] %}
+                            <button type="button" class="btn-icon-danger" title="팀원 삭제" onclick="showDeleteConfirm('팀원 [{{ member.name }}]을 삭제하시겠습니까?', '/api/delete-member/{{ member.id }}')">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                        
+                        {% if team.members|length == 0 %}
+                        <div style="font-size: 0.85rem; color: #999; text-align:center; padding: 10px;">배정된 팀원이 없습니다.</div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- 담당장이거나 팀장인 경우 팀원 배정 가능 (실제로는 자기 팀만 추가할 수 있어야 하지만 UI 상으로는 모두 허용 처리) -->
+                    {% if role in ['담당장', '팀장'] %}
+                    <button class="btn-secondary" style="width: 100%; border-style: dashed;" onclick="openMemberModal('addMemberModal', {{ team.id }}, '{{ team.name }}')">
+                        <i class="fa-solid fa-plus"></i> 팀원 배정
+                    </button>
+                    {% endif %}
+                </div>
+                {% endfor %}
+                
+                {% if div.teams|length == 0 %}
+                <div style="color: var(--text-muted); padding: 20px;">생성된 팀이 없습니다. 담당장 권한으로 팀을 추가해주세요.</div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Add Team Modal -->
+<div id="addTeamModal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">새 팀 만들기</div>
+        <form action="/api/add-team" method="POST">
+            <input type="hidden" name="division_id" id="team_division_id">
+            <input type="hidden" name="current_role" value="{{ role }}">
+            <div class="form-group">
+                <label>팀 이름</label>
+                <input type="text" name="name" class="form-control" placeholder="예: 개발 1팀" required>
+            </div>
+            <div class="form-group">
+                <label>팀장 이름 (선택)</label>
+                <input type="text" name="leader_name" class="form-control" placeholder="예: 홍길동">
+            </div>
+            <div class="form-group">
+                <label>직급</label>
+                <select name="leader_position" class="form-control">
+                    <option value="사원">사원</option>
+                    <option value="선임">선임</option>
+                    <option value="책임" selected>책임</option>
+                    <option value="상무">상무</option>
+                    <option value="전문위원">전문위원</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>이메일 주소</label>
+                <input type="email" name="leader_email" class="form-control" placeholder="user@example.com">
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-secondary" onclick="closeModal('addTeamModal')">취소</button>
+                <button type="submit" class="primary-btn">추가하기</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Add Member Modal -->
+<div id="addMemberModal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">팀원 배정 (<span id="member_team_name_display"></span>)</div>
+        <form action="/api/add-member" method="POST">
+            <input type="hidden" name="team_id" id="member_team_id">
+            <input type="hidden" name="current_role" value="{{ role }}">
+            <div class="form-group">
+                <label>팀원 이름</label>
+                <input type="text" name="name" class="form-control" placeholder="이름 입력" required>
+            </div>
+            <div class="form-group">
+                <label>직급</label>
+                <select name="position" class="form-control" required>
+                    <option value="사원">사원</option>
+                    <option value="선임">선임</option>
+                    <option value="책임" selected>책임</option>
+                    <option value="상무">상무</option>
+                    <option value="전문위원">전문위원</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>이메일 주소</label>
+                <input type="email" name="email" class="form-control" placeholder="user@example.com">
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-secondary" onclick="closeModal('addMemberModal')">취소</button>
+                <button type="submit" class="primary-btn">배정하기</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 삭제 확인 모달 -->
+<div id="deleteConfirmModal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 360px; text-align: center;">
+        <div style="font-size: 2rem; color: #da1e28; margin-bottom: 12px;">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+        <div class="modal-header" style="justify-content: center;" id="delete-confirm-msg">삭제하시겠습니까?</div>
+        <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 20px;">이 작업은 되돌릴 수 없습니다.</p>
+        <form id="delete-confirm-form" method="POST" action="">
+            <div style="display: flex; gap: 12px; justify-content: center;">
+                <button type="button" class="btn-secondary" onclick="closeDeleteConfirm()">취소</button>
+                <button type="submit" style="padding: 8px 20px; background: #da1e28; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;">삭제</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openModal(id, parentId) {
+        document.getElementById(id).classList.add('active');
+        if(id === 'addTeamModal') {
+            document.getElementById('team_division_id').value = parentId;
+        }
+    }
+    
+    function openMemberModal(id, teamId, teamName) {
+        document.getElementById(id).classList.add('active');
+        document.getElementById('member_team_id').value = teamId;
+        document.getElementById('member_team_name_display').innerText = teamName;
+    }
+
+    function closeModal(id) {
+        document.getElementById(id).classList.remove('active');
+    }
+
+    // 확인 모달 + 폼 제출 방식으로 삭제 (CSRF-safe, session-safe)
+    function showDeleteConfirm(message, actionUrl) {
+        document.getElementById('delete-confirm-msg').innerText = message;
+        document.getElementById('delete-confirm-form').action = actionUrl;
+        document.getElementById('deleteConfirmModal').classList.add('active');
+    }
+
+    function closeDeleteConfirm() {
+        document.getElementById('deleteConfirmModal').classList.remove('active');
+    }
+</script>
+{% endblock %}

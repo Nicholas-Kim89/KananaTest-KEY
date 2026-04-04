@@ -1,0 +1,831 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+/* ── AI 요약 페이지 ─────────────────────────────────────── */
+.summary-page { display: flex; flex-direction: column; gap: 24px; }
+
+/* 필터 카드 */
+.filter-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 28px 32px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.06);
+}
+.filter-card h2 {
+    font-size: 1.05rem; font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 18px;
+    display: flex; align-items: center; gap: 8px;
+}
+.filter-card h2 i { color: var(--primary-color); }
+
+.filter-row { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end; }
+.filter-group { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 180px; }
+.filter-group label {
+    font-size: .78rem; font-weight: 500;
+    color: var(--text-secondary);
+    text-transform: uppercase; letter-spacing: .4px;
+}
+.filter-group select,
+.filter-group input[type="date"] {
+    padding: 10px 13px;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    background: var(--bg-color);
+    color: var(--text-primary);
+    font-size: .9rem;
+    transition: border-color .2s, box-shadow .2s;
+}
+.filter-group select:focus,
+.filter-group input[type="date"]:focus {
+    outline: none; border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(var(--primary-rgb),.15);
+}
+
+.btn-generate {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 11px 26px;
+    background: linear-gradient(135deg, var(--primary-color), #5b21b6);
+    color: white; border: none; border-radius: 10px;
+    font-size: .92rem; font-weight: 600;
+    cursor: pointer; white-space: nowrap; flex-shrink: 0;
+    transition: transform .15s, box-shadow .15s, opacity .15s;
+}
+.btn-generate:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(139,92,246,.4); }
+.btn-generate:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+
+/* 역할 안내 */
+.role-notice {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 14px;
+    background: rgba(var(--primary-rgb),.07);
+    border: 1px solid rgba(var(--primary-rgb),.2);
+    border-radius: 20px;
+    font-size: .8rem; color: var(--primary-color);
+    margin-bottom: 14px;
+}
+
+/* 로딩 */
+.loading-card {
+    background: var(--card-bg); border: 1px solid var(--border-color);
+    border-radius: 16px; padding: 60px 32px; text-align: center; display: none;
+}
+.loading-card.visible { display: block; }
+.spinner-wrap { display: flex; justify-content: center; margin-bottom: 18px; }
+.spinner {
+    width: 48px; height: 48px;
+    border: 4px solid var(--border-color);
+    border-top-color: var(--primary-color);
+    border-radius: 50%;
+    animation: spin .8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-msg { color: var(--text-secondary); font-size: .92rem; }
+.loading-msg strong { color: var(--primary-color); }
+
+/* 에러 */
+.error-card {
+    background: #fff1f2; border: 1px solid #fecdd3;
+    border-radius: 12px; padding: 18px 22px;
+    color: #be123c; display: none; font-size: .9rem;
+}
+.error-card.visible { display: block; }
+
+/* 통계 */
+.stats-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; }
+.stat-box {
+    flex: 1; min-width: 90px;
+    background: linear-gradient(135deg, rgba(var(--primary-rgb),.08), rgba(var(--primary-rgb),.02));
+    border: 1px solid rgba(var(--primary-rgb),.18);
+    border-radius: 12px; padding: 14px 16px; text-align: center;
+}
+.stat-box .stat-num { font-size: 1.45rem; font-weight: 700; color: var(--primary-color); }
+.stat-box .stat-label { font-size: .73rem; color: var(--text-secondary); margin-top: 2px; }
+
+/* 결과 래퍼 */
+.result-wrap { display: none; flex-direction: column; gap: 20px; animation: fadeInUp .4s ease; }
+.result-wrap.visible { display: flex; }
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* 결과 헤더 */
+.result-header-card {
+    background: var(--card-bg); border: 1px solid var(--border-color);
+    border-radius: 16px; padding: 24px 28px;
+}
+.result-title-row {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 12px; margin-bottom: 20px;
+}
+.ai-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 4px 12px;
+    background: linear-gradient(135deg,#7c3aed,#2563eb);
+    color: white; border-radius: 20px;
+    font-size: .73rem; font-weight: 600; letter-spacing: .4px;
+}
+.result-title-row h3 { font-size: 1.1rem; font-weight: 700; }
+.meta-tag {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 11px;
+    background: var(--bg-color); border: 1px solid var(--border-color);
+    border-radius: 20px; font-size: .76rem; color: var(--text-secondary);
+}
+.btn-copy {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 7px 16px;
+    background: transparent; border: 1px solid var(--border-color);
+    border-radius: 8px; font-size: .82rem; color: var(--text-secondary);
+    cursor: pointer; transition: all .2s;
+}
+.btn-copy:hover { background: var(--primary-color); color: white; border-color: var(--primary-color); }
+
+/* 아이템 결과 카드 */
+.item-result-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 14px; overflow: hidden;
+}
+
+/* 요약 영역 */
+.item-summary-section {
+    padding: 22px 26px;
+    border-bottom: 2px dashed var(--border-color);
+}
+.item-summary-header {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 14px; flex-wrap: wrap;
+}
+.item-summary-header h4 { font-size: 1rem; font-weight: 700; }
+.status-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 10px; border-radius: 12px;
+    font-size: .75rem; font-weight: 600;
+}
+.status-badge.진행중 { background: #dbeafe; color: #1d4ed8; }
+.status-badge.완료   { background: #dcfce7; color: #15803d; }
+.status-badge.계획   { background: #f3e8ff; color: #7c3aed; }
+.status-badge.보류   { background: #fef3c7; color: #92400e; }
+.due-chip {
+    font-size: .75rem; color: var(--text-secondary);
+    background: var(--bg-color); border: 1px solid var(--border-color);
+    border-radius: 10px; padding: 2px 9px;
+}
+.summary-label {
+    display: flex; align-items: center; gap: 5px;
+    font-size: .72rem; font-weight: 600; color: var(--primary-color);
+    text-transform: uppercase; letter-spacing: .5px;
+    margin-bottom: 10px;
+}
+
+/* 글머리 요약 목록 */
+.summary-bullets { list-style: none; margin: 0; padding: 0; }
+.summary-bullets li {
+    display: flex; align-items: flex-start; gap: 8px;
+    padding: 5px 0;
+    font-size: .93rem; color: var(--text-primary); line-height: 1.6;
+    border-bottom: 1px solid rgba(var(--primary-rgb),.06);
+}
+.summary-bullets li:last-child { border-bottom: none; }
+.bullet-dot {
+    width: 6px; height: 6px;
+    background: var(--primary-color); border-radius: 50%;
+    flex-shrink: 0; margin-top: 8px;
+}
+
+/* 출처 영역 */
+.item-sources-section {
+    background: rgba(var(--primary-rgb),.025);
+}
+.sources-toggle-btn {
+    display: flex; align-items: center; justify-content: space-between;
+    width: 100%; padding: 14px 26px;
+    background: none; border: none; border-top: 1px dashed var(--border-color);
+    cursor: pointer; gap: 8px;
+    transition: background .15s;
+}
+.sources-toggle-btn:hover { background: rgba(var(--primary-rgb),.04); }
+.sources-label {
+    display: flex; align-items: center; gap: 5px;
+    font-size: .72rem; font-weight: 600; color: var(--text-secondary);
+    text-transform: uppercase; letter-spacing: .5px;
+    margin: 0;
+}
+.sources-toggle-icon {
+    font-size: .78rem; color: var(--text-muted);
+    transition: transform .25s ease;
+}
+.sources-toggle-icon.open { transform: rotate(180deg); }
+.sources-body {
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height .35s ease, padding .25s ease;
+    padding: 0 26px;
+}
+.sources-body.open {
+    max-height: 2000px;
+    padding: 0 26px 18px;
+}
+
+.source-entry {
+    display: flex; gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+.source-entry:last-child { border-bottom: none; }
+.source-timeline {
+    display: flex; flex-direction: column;
+    align-items: center; flex-shrink: 0; padding-top: 2px;
+}
+.timeline-dot {
+    width: 8px; height: 8px;
+    background: var(--primary-color); border-radius: 50%;
+}
+.timeline-line {
+    width: 1px; flex: 1; min-height: 20px;
+    background: var(--border-color); margin-top: 4px;
+}
+.source-body { flex: 1; }
+.source-meta {
+    display: flex; gap: 8px; align-items: center;
+    margin-bottom: 5px; flex-wrap: wrap;
+}
+.source-author { font-size: .8rem; font-weight: 600; color: var(--primary-color); }
+.source-date   { font-size: .75rem; color: var(--text-muted); }
+.source-content { font-size: .87rem; color: var(--text-primary); line-height: 1.65; }
+.source-comment {
+    display: flex; gap: 8px;
+    padding: 7px 10px;
+    background: var(--bg-color); border-left: 2px solid var(--primary-color);
+    border-radius: 0 6px 6px 0; margin-top: 5px;
+}
+.comment-author { font-size: .78rem; font-weight: 600; color: var(--text-secondary); white-space: nowrap; }
+.comment-date   { font-size: .73rem; color: var(--text-muted); }
+.comment-text   { font-size: .83rem; color: var(--text-primary); line-height: 1.5; }
+
+/* 팀 그룹 헤더 (담당장 전체 요약) */
+.team-group-header {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 4px 8px;
+    border-bottom: 2px solid var(--primary-color);
+    margin-bottom: 4px;
+}
+.team-group-header h4 {
+    font-size: .95rem; font-weight: 700; color: var(--text-primary);
+    margin: 0;
+}
+.team-group-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 10px;
+    background: linear-gradient(135deg, rgba(var(--primary-rgb),.14), rgba(var(--primary-rgb),.06));
+    border: 1px solid rgba(var(--primary-rgb),.25);
+    border-radius: 12px;
+    font-size: .72rem; font-weight: 600; color: var(--primary-color);
+}
+.team-group-wrap { display: flex; flex-direction: column; gap: 12px; }
+</style>
+
+<div class="summary-page">
+
+    <!-- ── 필터 카드 ─────────────────────────────────── -->
+    <div class="filter-card">
+        <h2><i class="fa-solid fa-sliders"></i> AI 요약 설정</h2>
+
+        {% if role == '팀원' %}
+        <div class="role-notice">
+            <i class="fa-solid fa-circle-info"></i>
+            소속 팀의 아이템을 선택하여 진척 요약을 생성할 수 있습니다.
+        </div>
+        {% endif %}
+        {% if role == '팀장' %}
+        <div class="role-notice">
+            <i class="fa-solid fa-circle-info"></i>
+            소속 담당의 모든 팀을 선택할 수 있습니다. 내 팀은 아이템별 선택이 가능합니다.
+        </div>
+        {% endif %}
+
+        <form id="summaryForm">
+            <div class="filter-row">
+
+                {% if role == '팀원' %}
+                <!-- 팀원: 아이템 드롭다운 -->
+                <div class="filter-group" style="flex:2; min-width:240px;">
+                    <label><i class="fa-solid fa-rocket"></i> 아이템 선택</label>
+                    <select id="itemSelect" name="item_id" required>
+                        <option value="">── 아이템을 선택하세요 ──</option>
+                        {% for item in my_items %}
+                        <option value="{{ item.id }}">
+                            [{{ item.status }}] {{ item.title }}
+                            {% if item.due_date %} (~{{ item.due_date }}){% endif %}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                {% elif role == '팀장' %}
+                <!-- 팀장: 팀 + 아이템 드롭다운 -->
+                <div class="filter-group" style="min-width:190px;">
+                    <label><i class="fa-solid fa-users"></i> 팀</label>
+                    <select id="teamSelect" name="team_id">
+                        {% for team in available_teams %}
+                        <option value="{{ team.id }}"
+                            data-is-own="{{ 'true' if team.id == my_team_id else 'false' }}"
+                            {% if my_team_id and team.id == my_team_id %}selected{% endif %}>
+                            {{ team.name }}{% if team.id == my_team_id %} (내 팀){% endif %}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="filter-group" style="min-width:200px;" id="itemGroup">
+                    <label><i class="fa-solid fa-rocket"></i> 아이템</label>
+                    <select id="itemSelectLeader" name="item_id">
+                        <option value="">── 모든 아이템 ──</option>
+                        {% for item in my_items %}
+                        <option value="{{ item.id }}" class="own-team-item">
+                            [{{ item.status }}] {{ item.title }}
+                            {% if item.due_date %} (~{{ item.due_date }}){% endif %}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                {% else %}
+                <!-- 담당장: 팀 + 아이템 드롭다운 -->
+                <div class="filter-group" style="min-width:190px;">
+                    <label><i class="fa-solid fa-building"></i> 팀</label>
+                    <select id="teamSelect" name="team_id">
+                        <option value="">── 전체 팀 ──</option>
+                        {% for team in available_teams %}
+                        <option value="{{ team.id }}">
+                            {{ team.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="filter-group" style="min-width:200px;" id="divItemGroup">
+                    <label><i class="fa-solid fa-rocket"></i> 아이템</label>
+                    <select id="itemSelectDiv" name="item_id" disabled>
+                        <option value="">── 모든 아이템 ──</option>
+                    </select>
+                </div>
+                {% endif %}
+
+                <div class="filter-group">
+                    <label><i class="fa-solid fa-calendar-day"></i> 시작일</label>
+                    <input type="date" id="startDate" value="{{ default_start }}">
+                </div>
+                <div class="filter-group">
+                    <label><i class="fa-solid fa-calendar-check"></i> 종료일</label>
+                    <input type="date" id="endDate" value="{{ default_end }}">
+                </div>
+                <button type="submit" class="btn-generate" id="generateBtn">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> AI 요약 생성
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- 로딩 -->
+    <div class="loading-card" id="loadingCard">
+        <div class="spinner-wrap"><div class="spinner"></div></div>
+        <div class="loading-msg">
+            <strong>Gemini AI</strong>가 진척사항을 분석하고 있습니다…<br>
+            <span style="font-size:.83rem; margin-top:6px; display:block;">핵심 내용을 4줄 이내 목록으로 요약합니다.</span>
+        </div>
+    </div>
+
+    <!-- 에러 -->
+    <div class="error-card" id="errorCard">
+        <i class="fa-solid fa-circle-exclamation"></i>
+        <span id="errorMsg"></span>
+    </div>
+
+    <!-- ── 결과 래퍼 ──────────────────────────────────── -->
+    <div class="result-wrap" id="resultWrap">
+
+        <!-- 헤더 카드 -->
+        <div class="result-header-card">
+            <div class="result-title-row">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <div class="ai-badge"><i class="fa-solid fa-sparkles"></i> Gemini AI</div>
+                    <h3 id="resultTitle">진척 요약 보고서</h3>
+                </div>
+                <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+                    <span class="meta-tag" id="metaDate"></span>
+                    <span class="meta-tag" id="metaScope"></span>
+                    <button class="btn-copy" onclick="copySummary()">
+                        <i class="fa-solid fa-copy"></i> 복사
+                    </button>
+                </div>
+            </div>
+            <!-- 통계 (팀원은 총 아이템 없음) -->
+            <div class="stats-row" id="statsRow"></div>
+        </div>
+
+        <!-- 아이템별 카드 -->
+        <div id="itemCards"></div>
+    </div>
+</div>
+
+<script>
+const IS_MEMBER   = {{ 'true' if role == '팀원' else 'false' }};
+const IS_LEADER   = {{ 'true' if role == '팀장' else 'false' }};
+const IS_DIVISION = {{ 'true' if role == '담당장' else 'false' }};
+const MY_TEAM_ID  = '{{ my_team_id or "" }}';
+// 담당장 전용: 팀별 아이템 데이터
+const ITEMS_BY_TEAM = {{ items_by_team | tojson }};
+
+const form        = document.getElementById('summaryForm');
+const loadingEl   = document.getElementById('loadingCard');
+const errorEl     = document.getElementById('errorCard');
+const resultWrap  = document.getElementById('resultWrap');
+const generateBtn = document.getElementById('generateBtn');
+
+// 팀장: 팀 선택 변경 시 아이템 드롭다운 제어
+if (IS_LEADER) {
+    const teamSel   = document.getElementById('teamSelect');
+    const itemGroup = document.getElementById('itemGroup');
+    const itemSel   = document.getElementById('itemSelectLeader');
+    const ownItems  = Array.from(itemSel.querySelectorAll('option.own-team-item'));
+
+    function updateItemDropdown() {
+        const selectedOpt = teamSel.options[teamSel.selectedIndex];
+        const isOwn = selectedOpt && selectedOpt.dataset.isOwn === 'true';
+
+        // 아이템 드롭다운: 내 팀이면 활성화, 남의 팀이면 '모두'로 고정
+        itemSel.value = ''; // 초기화
+        ownItems.forEach(opt => {
+            opt.style.display = isOwn ? '' : 'none';
+        });
+        itemSel.disabled = !isOwn;
+        if (!isOwn) {
+            itemSel.value = '';
+            itemGroup.style.opacity = '0.45';
+            itemGroup.title = '다른 팀은 아이템 전체만 조회됩니다';
+        } else {
+            itemGroup.style.opacity = '1';
+            itemGroup.title = '';
+        }
+    }
+    teamSel.addEventListener('change', updateItemDropdown);
+    updateItemDropdown(); // 초기 실행
+}
+
+// 담당장: 팀 선택 변경 시 아이템 드롭다운 동적 쫘워든
+if (IS_DIVISION) {
+    const teamSel    = document.getElementById('teamSelect');
+    const itemGroup  = document.getElementById('divItemGroup');
+    const itemSel    = document.getElementById('itemSelectDiv');
+
+    function updateDivItemDropdown() {
+        const tid = teamSel.value;
+        // 옵션 초기화
+        itemSel.innerHTML = '<option value="">── 모든 아이템 ──</option>';
+
+        if (tid && ITEMS_BY_TEAM[tid] && ITEMS_BY_TEAM[tid].length > 0) {
+            ITEMS_BY_TEAM[tid].forEach(item => {
+                const opt = document.createElement('option');
+                opt.value = item.id;
+                opt.textContent = `[${item.status}] ${item.title}${item.due_date ? ' (~' + item.due_date + ')' : ''}`;
+                itemSel.appendChild(opt);
+            });
+            itemSel.disabled = false;
+            itemGroup.style.opacity = '1';
+            itemGroup.title = '';
+        } else {
+            itemSel.disabled = true;
+            itemGroup.style.opacity = tid ? '0.45' : '0.45';
+            itemGroup.title = tid ? '선택한 팀에 아이템이 없습니다' : '팀을 먼저 선택해 주세요';
+        }
+    }
+    teamSel.addEventListener('change', updateDivItemDropdown);
+    updateDivItemDropdown(); // 초기 실행
+}
+
+form.addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    loadingEl.classList.remove('visible');
+    errorEl.classList.remove('visible');
+    resultWrap.classList.remove('visible');
+    loadingEl.classList.add('visible');
+    generateBtn.disabled = true;
+    generateBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 생성 중…';
+
+    const startDate = document.getElementById('startDate').value;
+    const endDate   = document.getElementById('endDate').value;
+
+    let payload = { start_date: startDate, end_date: endDate };
+
+    if (IS_MEMBER) {
+        const itemSel = document.getElementById('itemSelect');
+        if (!itemSel.value) {
+            loadingEl.classList.remove('visible');
+            showError('아이템을 선택해 주세요.');
+            generateBtn.disabled = false;
+            generateBtn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> AI 요약 생성';
+            return;
+        }
+        payload.item_id = itemSel.value;
+    } else if (IS_LEADER) {
+        const teamSel = document.getElementById('teamSelect');
+        const itemSel = document.getElementById('itemSelectLeader');
+        if (!teamSel.value) {
+            loadingEl.classList.remove('visible');
+            showError('팀을 선택해 주세요.');
+            generateBtn.disabled = false;
+            generateBtn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> AI 요약 생성';
+            return;
+        }
+        payload.team_id = teamSel.value;
+        // 자기 팀이고 아이템이 선택된 경우만 item_id 포함
+        const selectedOpt = teamSel.options[teamSel.selectedIndex];
+        const isOwn = selectedOpt && selectedOpt.dataset.isOwn === 'true';
+        if (isOwn && itemSel && itemSel.value) {
+            payload.item_id = itemSel.value;
+        }
+    } else if (IS_DIVISION) {
+        const teamSel = document.getElementById('teamSelect');
+        const itemSel = document.getElementById('itemSelectDiv');
+        payload.team_id = teamSel ? teamSel.value : '';
+        // 팀이 선택되어 있고 특정 아이템이 선택된 경우만 item_id 포함
+        if (teamSel && teamSel.value && itemSel && itemSel.value) {
+            payload.item_id = itemSel.value;
+        }
+    } else {
+        const teamSel = document.getElementById('teamSelect');
+        payload.team_id = teamSel ? teamSel.value : '';
+    }
+
+    try {
+        const res  = await fetch('/api/ai-summary', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        loadingEl.classList.remove('visible');
+
+        if (!res.ok || data.error) { showError(data.error || '알 수 없는 오류'); return; }
+        renderResult(data);
+
+    } catch(err) {
+        loadingEl.classList.remove('visible');
+        showError('서버 통신 오류: ' + err.message);
+    } finally {
+        generateBtn.disabled = false;
+        generateBtn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> AI 요약 생성';
+    }
+});
+
+function showError(msg) {
+    document.getElementById('errorMsg').textContent = ' ' + msg;
+    errorEl.classList.add('visible');
+}
+
+/* ── 결과 렌더링 ─────────────────────────────────────── */
+function renderResult(data) {
+    const s = data.stats;
+
+    document.getElementById('resultTitle').textContent =
+        (data.team_name || (IS_MEMBER ? '아이템' : '전체')) + ' 진척 요약 보고서';
+
+    document.getElementById('metaDate').innerHTML =
+        '<i class="fa-solid fa-calendar"></i> ' + data.start_date + ' ~ ' + data.end_date;
+    document.getElementById('metaScope').innerHTML = data.team_name
+        ? '<i class="fa-solid fa-users"></i> ' + data.team_name
+        : '<i class="fa-solid fa-globe"></i> 전체';
+
+    // 통계: 담당장 전체 요약 vs 기타
+    let statsHtml;
+    if (data.is_division_all) {
+        // 담당 전체: 팀 수, 아이템 수, 활동 팀원
+        statsHtml = `
+        <div class="stat-box">
+            <div class="stat-num">${s.team_count}</div>
+            <div class="stat-label">팀 수</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-num">${s.item_count}</div>
+            <div class="stat-label">아이템 수</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-num">${s.active_members}</div>
+            <div class="stat-label">활동 팀원</div>
+        </div>`;
+    } else {
+        statsHtml = `
+        <div class="stat-box">
+            <div class="stat-num">${s.total_logs}</div>
+            <div class="stat-label">진척 로그</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-num">${s.total_comments}</div>
+            <div class="stat-label">댓글</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-num">${s.active_members}</div>
+            <div class="stat-label">활동 팀원</div>
+        </div>`;
+    }
+    document.getElementById('statsRow').innerHTML = statsHtml;
+
+    // AI 요약을 ## 헤더 기준으로 아이템별 분리
+    const summaryBlocks = parseSummaryBlocks(data.summary);
+    // 출처 표시 플래그를 전역으로 저장
+    window._showSources = !!data.show_sources;
+
+    const container = document.getElementById('itemCards');
+    container.innerHTML = '';
+
+    if (data.is_division_all) {
+        // ── 담당장 전체 요약: 팀별 그룹 헤더 추가
+        const teamGroups = {}; // team_name → [{item, bullets}]
+        (data.items || []).forEach((item, idx) => {
+            const tn = item.team_name || '미상정';
+            if (!teamGroups[tn]) teamGroups[tn] = [];
+            teamGroups[tn].push({ item, bullets: summaryBlocks[idx] || [] });
+        });
+
+        Object.entries(teamGroups).forEach(([teamName, entries]) => {
+            // 팀 헤더
+            const headerEl = document.createElement('div');
+            headerEl.className = 'team-group-header';
+            headerEl.innerHTML = `
+                <span class="team-group-badge"><i class="fa-solid fa-users"></i> 팀</span>
+                <h4>${escHtml(teamName)}</h4>
+                <span style="font-size:.75rem;color:var(--text-muted);">(${entries.length}개 아이템)</span>
+            `;
+            // 팀 랩퍼
+            const groupWrap = document.createElement('div');
+            groupWrap.className = 'team-group-wrap';
+
+            entries.forEach(({ item, bullets }) => {
+                groupWrap.appendChild(buildItemCard(item, bullets));
+            });
+
+            const teamSection = document.createElement('div');
+            teamSection.style.cssText = 'display:flex; flex-direction:column; gap:8px;';
+            teamSection.appendChild(headerEl);
+            teamSection.appendChild(groupWrap);
+            container.appendChild(teamSection);
+        });
+    } else {
+        // ── 일반 (팀원, 팀장, 담당장 특정팀/특정아이템)
+        (data.items || []).forEach((item, idx) => {
+            const bullets = summaryBlocks[idx] || [];
+            container.appendChild(buildItemCard(item, bullets));
+        });
+    }
+
+    resultWrap.dataset.rawSummary = data.summary;
+    resultWrap.classList.add('visible');
+}
+
+/* Gemini 응답 → 아이템별 bullet 배열 리스트 반환
+   예: [ ['- 항목1', '- 항목2'], ['- 항목A'] ] */
+function parseSummaryBlocks(text) {
+    const blocks = [];
+    // ## 또는 ### 헤더로 분할
+    const sections = text.split(/^##+ /m).filter(s => s.trim());
+    sections.forEach(section => {
+        const lines = section.split('\n');
+        lines.shift(); // 첫 줄(헤더 텍스트)은 제거 (우리가 직접 렌더)
+        // - 로 시작하는 줄만 추출, 최대 4개
+        const bullets = lines
+            .map(l => l.trim())
+            .filter(l => l.startsWith('- ') || l.startsWith('* '))
+            .map(l => l.replace(/^[-*]\s+/, '').trim())
+            .slice(0, 4);
+        blocks.push(bullets);
+    });
+    return blocks;
+}
+
+/* 아이템 카드 생성 */
+function buildItemCard(item, bullets) {
+    const card = document.createElement('div');
+    card.className = 'item-result-card';
+
+    const statusIcon = {
+        '진행중': 'fa-spinner', '완료': 'fa-check',
+        '계획': 'fa-clock', '보류': 'fa-pause'
+    }[item.status] || 'fa-circle';
+
+    // ── 요약 섹션
+    const summarySection = document.createElement('div');
+    summarySection.className = 'item-summary-section';
+
+    const bulletsHtml = bullets.length
+        ? '<ul class="summary-bullets">' +
+          bullets.map(b => `<li><span class="bullet-dot"></span><span>${escHtml(b)}</span></li>`).join('') +
+          '</ul>'
+        : '<span style="color:var(--text-muted);font-size:.88rem;">요약 내용을 생성하지 못했습니다.</span>';
+
+    summarySection.innerHTML = `
+        <div class="item-summary-header">
+            <span class="status-badge ${item.status || '계획'}">
+                <i class="fa-solid ${statusIcon}"></i> ${escHtml(item.status)}
+            </span>
+            <h4>${escHtml(item.title)}</h4>
+            ${item.due_date ? '<span class="due-chip"><i class="fa-regular fa-calendar"></i> ' + escHtml(item.due_date) + '</span>' : ''}
+        </div>
+        <div class="summary-label"><i class="fa-solid fa-wand-magic-sparkles"></i> AI 요약</div>
+        ${bulletsHtml}
+    `;
+
+    // ── 출처 섹션 (show_sources 플래그가 있을 때만 추가)
+    if (window._showSources) {
+        const sourcesSection = document.createElement('div');
+        sourcesSection.className = 'item-sources-section';
+
+        // 토글 버튼 (헤더)
+        const toggleBtn = document.createElement('button');
+        toggleBtn.className = 'sources-toggle-btn';
+        toggleBtn.type = 'button';
+        toggleBtn.innerHTML = `
+            <div class="sources-label"><i class="fa-solid fa-list-ul"></i> 출처 · 타임라인 원문 <span style="font-size:.7rem;color:var(--text-muted);font-weight:400;">(${(item.sources||[]).length}건)</span></div>
+            <i class="fa-solid fa-chevron-down sources-toggle-icon" id="icon-${Math.random().toString(36).slice(2)}"></i>
+        `;
+
+        // 본문 컨테이너 (기본 접힘)
+        const sourcesBody = document.createElement('div');
+        sourcesBody.className = 'sources-body'; // 기본: collapsed
+
+        // 토글 클릭 이벤트
+        toggleBtn.addEventListener('click', () => {
+            const icon = toggleBtn.querySelector('.sources-toggle-icon');
+            const isOpen = sourcesBody.classList.toggle('open');
+            icon.classList.toggle('open', isOpen);
+        });
+
+        (item.sources || []).forEach((src, si) => {
+            const isLast = si === item.sources.length - 1;
+            const entry  = document.createElement('div');
+            entry.className = 'source-entry';
+
+            const commentsHtml = (src.comments && src.comments.length)
+                ? '<div style="margin-top:6px;">' +
+                  src.comments.map(c => `
+                    <div class="source-comment">
+                        <div>
+                            <div style="display:flex; gap:8px; margin-bottom:3px;">
+                                <span class="comment-author">${escHtml(c.author)}</span>
+                                <span class="comment-date">${escHtml(c.date)}</span>
+                            </div>
+                            <div class="comment-text">${escHtml(c.text)}</div>
+                        </div>
+                    </div>`).join('') +
+                  '</div>'
+                : '';
+
+            entry.innerHTML = `
+                <div class="source-timeline">
+                    <div class="timeline-dot"></div>
+                    ${!isLast ? '<div class="timeline-line"></div>' : ''}
+                </div>
+                <div class="source-body">
+                    <div class="source-meta">
+                        <span class="source-author"><i class="fa-solid fa-user"></i> ${escHtml(src.author)}</span>
+                        <span class="source-date">${escHtml(src.date)}</span>
+                    </div>
+                    <div class="source-content">${escHtml(src.content)}</div>
+                    ${commentsHtml}
+                </div>`;
+            sourcesBody.appendChild(entry);
+        });
+
+        sourcesSection.appendChild(toggleBtn);
+        sourcesSection.appendChild(sourcesBody);
+
+        card.appendChild(summarySection);
+        card.appendChild(sourcesSection);
+    } else {
+        card.appendChild(summarySection);
+    }
+
+    return card;
+}
+
+function escHtml(s) {
+    if (!s) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function copySummary() {
+    const text = resultWrap.dataset.rawSummary;
+    if (!text) return;
+    navigator.clipboard.writeText(text).then(() => {
+        const btn = document.querySelector('.btn-copy');
+        btn.innerHTML = '<i class="fa-solid fa-check"></i> 복사됨';
+        setTimeout(() => { btn.innerHTML = '<i class="fa-solid fa-copy"></i> 복사'; }, 2000);
+    });
+}
+</script>
+
+{% endblock %}

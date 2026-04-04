@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title|default("Nexus AI - 업무 진척 관리") }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <a href="{{ url_for('index') }}" class="logo">
+                <i class="fa-solid fa-sparkles"></i> <span class="nav-text">Nexus AI</span>
+            </a>
+        </div>
+        <ul class="nav-menu">
+            <li class="nav-item">
+                <a href="{{ url_for('index') }}" class="nav-link {% if request.endpoint == 'index' %}active{% endif %}">
+                    <i class="fa-solid fa-house"></i> <span class="nav-text">대시보드</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ url_for('progress') }}" class="nav-link {% if request.endpoint == 'progress' %}active{% endif %}">
+                    <i class="fa-solid fa-list-check"></i> <span class="nav-text">나의 진척 관리</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ url_for('items') }}" class="nav-link {% if request.endpoint == 'items' %}active{% endif %}">
+                    <i class="fa-solid fa-rocket"></i> <span class="nav-text">추진 아이템</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ url_for('ai_summary') }}" class="nav-link {% if request.endpoint == 'ai_summary' %}active{% endif %}">
+                    <i class="fa-solid fa-robot"></i> <span class="nav-text">AI 요약 보고서</span>
+                </a>
+            </li>
+            {% if session.role in ['담당장', '팀장'] %}
+            <li class="nav-item">
+                <a href="{{ url_for('org_manage') }}" class="nav-link {% if request.endpoint == 'org_manage' %}active{% endif %}">
+                    <i class="fa-solid fa-sitemap"></i> <span class="nav-text">조직 관리</span>
+                </a>
+            </li>
+            {% endif %}
+
+            <li class="nav-item">
+                <a href="{{ url_for('notifications') }}" class="nav-link {% if request.endpoint == 'notifications' %}active{% endif %}" style="position:relative;">
+                    <i class="fa-solid fa-bell"></i> <span class="nav-text">알림</span>
+                    <span id="sidebarNotifBadge" style="display:none;position:absolute;top:6px;right:10px;background:linear-gradient(135deg,#ef4444,#f97316);color:#fff;font-size:0.65rem;font-weight:700;border-radius:999px;padding:1px 6px;min-width:18px;text-align:center;">0</span>
+                </a>
+            </li>
+        </ul>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <header class="top-header">
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <button id="sidebarToggle" class="icon-btn">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+                <div class="header-breadcrumb">
+                    <span style="color: var(--text-muted);">Nexus AI / </span>
+                    <span style="font-weight: 500;">{{ title|default("대시보드") }}</span>
+                </div>
+            </div>
+            <div class="user-profile" style="position: relative; display: flex; align-items: center; gap: 12px;">
+                {% if session.name %}
+                <div class="avatar" style="background-color: var(--primary-color); color: white;">{{ session.name[0] }}</div>
+                <div style="display: flex; flex-direction: column;">
+                    <span style="font-weight: 500;">{{ session.name }} ({{ session.role }})</span>
+                    <div style="display: flex; gap: 8px; font-size: 0.8rem; margin-top: 4px;">
+                        <a href="{{ url_for('change_password') }}" style="color: var(--text-secondary); text-decoration: none;"><i class="fa-solid fa-key"></i> 비밀번호 변경</a>
+                        <a href="{{ url_for('logout') }}" style="color: #da1e28; text-decoration: none;"><i class="fa-solid fa-right-from-bracket"></i> 로그아웃</a>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </header>
+
+        <div class="content-wrapper">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <!-- Floating Chatbot UI -->
+    <div class="chatbot-container">
+        <!-- Chatbot Button -->
+        <button class="chatbot-btn" id="chatbotBtn">
+            <i class="fa-solid fa-robot"></i>
+        </button>
+        
+        <!-- Chatbot Window -->
+        <div class="chatbot-window" id="chatbotWindow">
+            <div class="chatbot-header">
+                <div>
+                    <i class="fa-solid fa-sparkles"></i> AI 어시스턴트
+                </div>
+                <button class="icon-btn" id="closeChatBtn" style="color:white;font-size:.9rem;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="chatbot-body" id="chatMessages">
+                <div class="chat-msg model-msg">
+                    <div class="chat-ai-icon"><i class="fa-solid fa-robot"></i></div>
+                    <div class="chat-bubble">안녕하세요! 궁금한 조직의 진척이나 아이템에 대해 질문해주세요.</div>
+                </div>
+            </div>
+            <div class="chatbot-footer">
+                <form id="chatForm">
+                    <input type="text" id="chatInput" placeholder="질문을 입력하세요..." autocomplete="off">
+                    <button type="submit"><i class="fa-solid fa-paper-plane"></i></button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- marked.js for Markdown parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <script>
+        document.getElementById('sidebarToggle').addEventListener('click', function() {
+            document.querySelector('.sidebar').classList.toggle('collapsed');
+            document.querySelector('.main-content').classList.toggle('expanded');
+        });
+
+        // --- 플로팅 챗봇 스크립트 ---
+        const chatbotBtn = document.getElementById('chatbotBtn');
+        const chatbotWindow = document.getElementById('chatbotWindow');
+        const closeChatBtn = document.getElementById('closeChatBtn');
+        const chatForm = document.getElementById('chatForm');
+        const chatInput = document.getElementById('chatInput');
+        const chatMessages = document.getElementById('chatMessages');
+
+        // 멀티턴 대화 기록
+        let chatHistory = [];
+
+        chatbotBtn.addEventListener('click', () => {
+            chatbotWindow.classList.toggle('open');
+            if (chatbotWindow.classList.contains('open')) {
+                chatInput.focus();
+            }
+        });
+
+        closeChatBtn.addEventListener('click', () => {
+            chatbotWindow.classList.remove('open');
+        });
+
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const msg = chatInput.value.trim();
+            if (!msg) return;
+
+            // 사용자 메시지 렌더링
+            appendMessage('user', msg);
+            chatInput.value = '';
+
+            // 로딩 표시
+            const loadingMsg = appendMessage('model', '<div class="chat-typing"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>', true);
+
+            try {
+                const res = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ message: msg, history: chatHistory })
+                });
+                const data = await res.json();
+                
+                loadingMsg.remove();
+                
+                if (data.error) {
+                    appendMessage('model', `<span style="color:red">Error: ${data.error}</span>`);
+                } else {
+                    const parsedText = marked.parse(data.reply);
+                    appendMessage('model', parsedText);
+                    // 히스토리 업데이트
+                    chatHistory.push({role: 'user', text: msg});
+                    chatHistory.push({role: 'model', text: data.reply});
+                }
+            } catch (err) {
+                loadingMsg.remove();
+                appendMessage('model', `<span style="color:red">Network Error: ${err.message}</span>`);
+            }
+        });
+
+        function appendMessage(role, text, isHTML = false) {
+            const wrap = document.createElement('div');
+            wrap.className = `chat-msg ${role}-msg`;
+            
+            const bubble = document.createElement('div');
+            bubble.className = 'chat-bubble';
+            if (isHTML) {
+                bubble.innerHTML = text;
+            } else if(role === 'model') {
+                bubble.innerHTML = text; // markdown parsed HTML
+            } else {
+                bubble.textContent = text;
+            }
+            
+            if(role === 'model') {
+                const aiIcon = document.createElement('div');
+                aiIcon.className = 'chat-ai-icon';
+                aiIcon.innerHTML = '<i class="fa-solid fa-robot"></i>';
+                wrap.appendChild(aiIcon);
+                wrap.appendChild(bubble);
+            } else {
+                wrap.appendChild(bubble);
+            }
+            
+            chatMessages.appendChild(wrap);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            return wrap;
+        }
+
+        // ── 사이드바 알림 뱅지 로딩 ──
+        (async function loadSidebarBadge() {
+            try {
+                const res = await fetch('/api/notifications?count_only=1');
+                const data = await res.json();
+                const badge = document.getElementById('sidebarNotifBadge');
+                if (badge && data.unread_count > 0) {
+                    badge.textContent = data.unread_count;
+                    badge.style.display = '';
+                }
+            } catch(e) { /* silent fail */ }
+        })();
+    </script>
+</body>
+</html>

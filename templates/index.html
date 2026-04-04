@@ -1,0 +1,359 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+/* ── 대시보드 전용 스타일 ───────────────────────────── */
+.dashboard-greeting {
+    margin-bottom: 28px;
+}
+.greeting-name {
+    font-size: 1.7rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.greeting-role-badge {
+    font-size: 0.8rem;
+    font-weight: 600;
+    border-radius: 8px;
+    padding: 3px 10px;
+    background: rgba(var(--primary-rgb), .12);
+    color: var(--primary-color);
+}
+.greeting-sub {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-top: 6px;
+}
+
+/* 통계 카드 그리드 */
+.dash-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 28px;
+}
+@media (max-width: 1100px) { .dash-stats-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 600px)  { .dash-stats-grid { grid-template-columns: 1fr; } }
+
+.dash-stat-card {
+    background: var(--card-bg);
+    border: 1.5px solid var(--border-color);
+    border-radius: 16px;
+    padding: 22px 22px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transition: transform .18s, box-shadow .18s;
+    cursor: default;
+}
+.dash-stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 28px rgba(0,0,0,.08);
+}
+.dash-stat-icon {
+    width: 44px; height: 44px;
+    border-radius: 13px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem;
+}
+.dash-stat-value {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1.1;
+    min-height: 2.4rem;
+}
+.dash-stat-value.is-text {
+    font-size: 1.15rem;
+    font-weight: 700;
+}
+.dash-stat-label {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+/* 로딩 스켈레톤 */
+.skeleton-pulse {
+    background: linear-gradient(90deg, var(--border-color) 25%, var(--hover-bg) 50%, var(--border-color) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s infinite;
+    border-radius: 8px;
+}
+@keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+/* 색상 변형 */
+.icon-orange { background: rgba(249,115,22,.12); color: #f97316; }
+.icon-blue   { background: rgba(59,130,246,.12);  color: #3b82f6; }
+.icon-green  { background: rgba(16,185,129,.12);  color: #10b981; }
+.icon-purple { background: rgba(139,92,246,.12);  color: #8b5cf6; }
+
+/* 섹션 제목 */
+.dash-section-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.dash-section-title::before {
+    content: '';
+    width: 4px; height: 18px;
+    background: linear-gradient(180deg, var(--primary-color), #8b5cf6);
+    border-radius: 2px;
+}
+
+/* 빠른 이동 그리드 */
+.quick-nav-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 28px;
+}
+@media (max-width: 1100px) { .quick-nav-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 600px)  { .quick-nav-grid { grid-template-columns: repeat(2, 1fr); } }
+
+.quick-nav-card {
+    background: var(--card-bg);
+    border: 1.5px solid var(--border-color);
+    border-radius: 16px;
+    padding: 24px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    color: var(--text-primary);
+    transition: all .18s;
+    text-align: center;
+}
+.quick-nav-card:hover {
+    border-color: var(--primary-color);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(var(--primary-rgb),.13);
+    background: var(--hover-bg);
+}
+.quick-nav-icon {
+    width: 52px; height: 52px;
+    border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.25rem;
+}
+.quick-nav-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+.quick-nav-desc {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    line-height: 1.4;
+}
+
+/* 시스템 안내 */
+.system-guide-card {
+    background: var(--card-bg);
+    border: 1.5px solid var(--border-color);
+    border-radius: 16px;
+    padding: 24px 28px;
+}
+.guide-steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px 16px;
+    margin-top: 16px;
+}
+@media (max-width: 900px) { .guide-steps { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 500px) { .guide-steps { grid-template-columns: 1fr; } }
+
+.guide-step {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+.guide-step-num {
+    width: 28px; height: 28px; min-width: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-color), #8b5cf6);
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+
+.guide-step-title {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+.guide-step-desc {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+</style>
+
+<!-- 환영 인사 -->
+<div class="dashboard-greeting">
+    <div class="greeting-name">
+        안녕하세요, <span id="greetName">{{ session.name }}</span>님
+        <span class="greeting-role-badge" id="greetRole">{{ session.role }}</span>
+    </div>
+    <div class="greeting-sub">오늘도 팀과 함께 목표를 향해 나아가세요.</div>
+</div>
+
+<!-- 통계 카드 4개 -->
+<div class="dash-stats-grid">
+    <!-- 미읽은 알림 -->
+    <div class="dash-stat-card">
+        <div class="dash-stat-icon icon-orange"><i class="fa-solid fa-bell"></i></div>
+        <div>
+            <div class="dash-stat-value" id="stat-unread">
+                <span class="skeleton-pulse" style="display:inline-block;width:48px;height:2rem;border-radius:6px;">&nbsp;</span>
+            </div>
+            <div class="dash-stat-label">미읽은 알림</div>
+        </div>
+    </div>
+    <!-- 소속 팀 -->
+    <div class="dash-stat-card">
+        <div class="dash-stat-icon icon-blue"><i class="fa-solid fa-people-group"></i></div>
+        <div>
+            <div class="dash-stat-value is-text" id="stat-team">
+                <span class="skeleton-pulse" style="display:inline-block;width:80px;height:1.8rem;border-radius:6px;">&nbsp;</span>
+            </div>
+            <div class="dash-stat-label">소속 팀</div>
+        </div>
+    </div>
+    <!-- 추진 아이템 -->
+    <div class="dash-stat-card">
+        <div class="dash-stat-icon icon-green"><i class="fa-solid fa-rocket"></i></div>
+        <div>
+            <div class="dash-stat-value" id="stat-items">
+                <span class="skeleton-pulse" style="display:inline-block;width:48px;height:2rem;border-radius:6px;">&nbsp;</span>
+            </div>
+            <div class="dash-stat-label">추진 아이템</div>
+        </div>
+    </div>
+    <!-- 이번주 진척 -->
+    <div class="dash-stat-card">
+        <div class="dash-stat-icon icon-purple"><i class="fa-solid fa-chart-line"></i></div>
+        <div>
+            <div class="dash-stat-value" id="stat-week">
+                <span class="skeleton-pulse" style="display:inline-block;width:48px;height:2rem;border-radius:6px;">&nbsp;</span>
+            </div>
+            <div class="dash-stat-label">이번 주 진척</div>
+        </div>
+    </div>
+</div>
+
+<!-- 빠른 이동 -->
+<div class="dash-section-title">빠른 이동</div>
+<div class="quick-nav-grid">
+    <a href="{{ url_for('progress') }}" class="quick-nav-card">
+        <div class="quick-nav-icon icon-blue"><i class="fa-solid fa-list-check"></i></div>
+        <div>
+            <div class="quick-nav-label">나의 진척 관리</div>
+            <div class="quick-nav-desc">이번 주 업무 진척을 기록하세요</div>
+        </div>
+    </a>
+    <a href="{{ url_for('items') }}" class="quick-nav-card">
+        <div class="quick-nav-icon icon-green"><i class="fa-solid fa-rocket"></i></div>
+        <div>
+            <div class="quick-nav-label">추진 아이템</div>
+            <div class="quick-nav-desc">팀의 주요 아이템을 확인하세요</div>
+        </div>
+    </a>
+    <a href="{{ url_for('ai_summary') }}" class="quick-nav-card">
+        <div class="quick-nav-icon icon-purple"><i class="fa-solid fa-robot"></i></div>
+        <div>
+            <div class="quick-nav-label">AI 요약 보고서</div>
+            <div class="quick-nav-desc">AI가 생성한 진척 보고서를 확인하세요</div>
+        </div>
+    </a>
+    <a href="{{ url_for('notifications') }}" class="quick-nav-card">
+        <div class="quick-nav-icon icon-orange"><i class="fa-solid fa-bell"></i></div>
+        <div>
+            <div class="quick-nav-label">알림</div>
+            <div class="quick-nav-desc">새로운 댓글과 진척 알림을 확인하세요</div>
+        </div>
+    </a>
+</div>
+
+<!-- 시스템 안내 -->
+<div class="dash-section-title">시스템 안내</div>
+<div class="system-guide-card">
+    <div class="guide-steps">
+        <div class="guide-step">
+            <div class="guide-step-num">1</div>
+            <div class="guide-step-body">
+                <div class="guide-step-title">나의 진척 관리</div>
+                <div class="guide-step-desc">본인에게 배정된 아이템의 진행 상황을 기록하고 관리합니다.</div>
+            </div>
+        </div>
+        <div class="guide-step">
+            <div class="guide-step-num">2</div>
+            <div class="guide-step-body">
+                <div class="guide-step-title">추진 아이템</div>
+                <div class="guide-step-desc">팀 및 담당의 주요 추진 과제를 등록하고 배정 상태를 확인합니다.</div>
+            </div>
+        </div>
+        <div class="guide-step">
+            <div class="guide-step-num">3</div>
+            <div class="guide-step-body">
+                <div class="guide-step-title">AI 요약 보고서</div>
+                <div class="guide-step-desc">등록된 진척 데이터를 AI가 분석하여 요약된 보고서를 생성합니다.</div>
+            </div>
+        </div>
+        <div class="guide-step">
+            <div class="guide-step-num">4</div>
+            <div class="guide-step-body">
+                <div class="guide-step-title">조직 관리</div>
+                <div class="guide-step-desc">그룹, 담당, 팀 및 구성원 정보를 관리하고 역할을 배정합니다.</div>
+            </div>
+        </div>
+        <div class="guide-step">
+            <div class="guide-step-num">5</div>
+            <div class="guide-step-body">
+                <div class="guide-step-title">알림</div>
+                <div class="guide-step-desc">본인 관련 진척 로그나 댓글의 업데이트 정보를 실시간으로 확인합니다.</div>
+            </div>
+        </div>
+        <div class="guide-step">
+            <div class="guide-step-num">6</div>
+            <div class="guide-step-body">
+                <div class="guide-step-title">AI 챗봇</div>
+                <div class="guide-step-desc">시스템 내 축적된 데이터를 바탕으로 궁금한 점을 질문하고 답변을 받습니다.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(async function loadDashboard() {
+    try {
+        const res  = await fetch('/api/dashboard');
+        const data = await res.json();
+
+        document.getElementById('stat-unread').textContent = data.unread_count ?? '-';
+        document.getElementById('stat-team').textContent   = data.team_name   ?? '-';
+        document.getElementById('stat-items').textContent  = data.item_count  ?? '-';
+        document.getElementById('stat-week').textContent   = data.week_progress ?? '-';
+
+        // 사이드바 뱃지 동기화
+        const sb = document.getElementById('sidebarNotifBadge');
+        if (sb) {
+            if (data.unread_count > 0) { sb.textContent = data.unread_count; sb.style.display = ''; }
+            else sb.style.display = 'none';
+        }
+    } catch(e) {
+        ['stat-unread','stat-team','stat-items','stat-week'].forEach(id => {
+            document.getElementById(id).textContent = '-';
+        });
+    }
+})();
+</script>
+{% endblock %}

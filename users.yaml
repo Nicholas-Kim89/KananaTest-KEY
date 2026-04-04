@@ -1,0 +1,19 @@
+users:
+  - id: rosynante
+    email: rosynante@lgchem.com
+    name: 박정재
+  - id: kimeunyong
+    email: kimeunyong@lgchem.com
+    name: 김은용
+  - id: oshznim
+    email: oshznim@lgchem.com
+    name: 오승환
+  - id: jooheuison
+    email: jooheuison@lgchem.com
+    name: 손주희
+  - id: infotech
+    email: infotech@lgchem.com
+    name: 김재구
+  - id: mkbae
+    email: mkbae@lgchem.com
+    name: 배민규

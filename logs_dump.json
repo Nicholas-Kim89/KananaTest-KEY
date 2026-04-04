@@ -1,0 +1,218 @@
+[
+  {
+    "id": 1,
+    "item_id": 1,
+    "member_email": "oshznim@lgchem.com",
+    "member_name": "오승환",
+    "content": "파일럿 인원 추가 200명 10개팀 추가\r\n전문추출, 회의록 생성 제미나이 콜링 코드 수정",
+    "created_at": "2026-04-04 04:13:57"
+  },
+  {
+    "id": 2,
+    "item_id": 2,
+    "member_email": "yujin.choi@lgchem.com",
+    "member_name": "최유진",
+    "content": "요구사항 분석 완료. 자동화 대상 업무 목록 15개 확보하였음. RAG 아키텍처 검토 시작.",
+    "created_at": "2026-03-28 14:00:00"
+  },
+  {
+    "id": 3,
+    "item_id": 2,
+    "member_email": "yujin.choi@lgchem.com",
+    "member_name": "최유진",
+    "content": "RAG 파이프라인 설계 초안 완성. LangChain 기반으로 구성하기로 결정.",
+    "created_at": "2026-03-29 10:00:00"
+  },
+  {
+    "id": 4,
+    "item_id": 2,
+    "member_email": "dohyun.kang@lgchem.com",
+    "member_name": "강도현",
+    "content": "인프라 환경 세팅 완료. Docker Compose 구성하여 로컬 테스트 환경 준비함.",
+    "created_at": "2026-03-29 15:00:00"
+  },
+  {
+    "id": 5,
+    "item_id": 2,
+    "member_email": "yujin.choi@lgchem.com",
+    "member_name": "최유진",
+    "content": "벡터DB(Chroma) 연동 완료. 문서 임베딩 파이프라인 1차 구현.",
+    "created_at": "2026-03-31 09:00:00"
+  },
+  {
+    "id": 6,
+    "item_id": 2,
+    "member_email": "dohyun.kang@lgchem.com",
+    "member_name": "강도현",
+    "content": "FastAPI 기반 API 서버 구성. 기본 엔드포인트 /query, /ingest 개발 완료.",
+    "created_at": "2026-04-01 16:00:00"
+  },
+  {
+    "id": 7,
+    "item_id": 2,
+    "member_email": "yujin.choi@lgchem.com",
+    "member_name": "최유진",
+    "content": "내부 테스트 시작. 10개 문서 기준 평균 응답시간 1.2초 확인. 목표는 0.8초.",
+    "created_at": "2026-04-02 09:00:00"
+  },
+  {
+    "id": 8,
+    "item_id": 2,
+    "member_email": "dohyun.kang@lgchem.com",
+    "member_name": "강도현",
+    "content": "캐싱 레이어 추가 후 응답시간 0.85초로 개선. 거의 목표치에 근접.",
+    "created_at": "2026-04-03 11:00:00"
+  },
+  {
+    "id": 9,
+    "item_id": 3,
+    "member_email": "yujin.choi@lgchem.com",
+    "member_name": "최유진",
+    "content": "사용자 인터뷰 5건 완료. 핵심 요구사항: 사내 규정 문서 검색 + 자연어 질의.",
+    "created_at": "2026-03-25 11:00:00"
+  },
+  {
+    "id": 10,
+    "item_id": 3,
+    "member_email": "dohyun.kang@lgchem.com",
+    "member_name": "강도현",
+    "content": "OpenAI API 연동 및 기본 프롬프트 엔지니어링 완료.",
+    "created_at": "2026-03-26 15:00:00"
+  },
+  {
+    "id": 11,
+    "item_id": 3,
+    "member_email": "yujin.choi@lgchem.com",
+    "member_name": "최유진",
+    "content": "UI 프로토타입 Figma 작업 완료. 팀장 검토 후 승인받음.",
+    "created_at": "2026-03-28 16:00:00"
+  },
+  {
+    "id": 12,
+    "item_id": 3,
+    "member_email": "yujin.choi@lgchem.com",
+    "member_name": "최유진",
+    "content": "React 기반 챗봇 UI 개발 완료. 백엔드 연동 테스트 중.",
+    "created_at": "2026-03-30 16:00:00"
+  },
+  {
+    "id": 13,
+    "item_id": 3,
+    "member_email": "dohyun.kang@lgchem.com",
+    "member_name": "강도현",
+    "content": "사내 문서 100건 벡터 인덱싱 완료. 검색 정확도 87%.",
+    "created_at": "2026-03-31 09:00:00"
+  },
+  {
+    "id": 14,
+    "item_id": 3,
+    "member_email": "yujin.choi@lgchem.com",
+    "member_name": "최유진",
+    "content": "최종 QA 완료. 버그 3건 수정. 배포 준비 완료.",
+    "created_at": "2026-04-02 09:00:00"
+  },
+  {
+    "id": 15,
+    "item_id": 3,
+    "member_email": "yujin.choi@lgchem.com",
+    "member_name": "최유진",
+    "content": "운영 서버 배포 완료. 사용자 피드백 수집 시작.",
+    "created_at": "2026-04-04 11:00:00"
+  },
+  {
+    "id": 16,
+    "item_id": 4,
+    "member_email": "hayoung.yoon@lgchem.com",
+    "member_name": "윤하영",
+    "content": "현행 데이터 입력 프로세스 현황 조사 완료. 문제점 12개 도출.",
+    "created_at": "2026-03-28 11:00:00"
+  },
+  {
+    "id": 17,
+    "item_id": 4,
+    "member_email": "sumin.jung@lgchem.com",
+    "member_name": "정수민",
+    "content": "데이터 품질 기준 초안 작성 (정확성, 완전성, 일관성, 시의성 4개 차원).",
+    "created_at": "2026-03-29 09:00:00"
+  },
+  {
+    "id": 18,
+    "item_id": 4,
+    "member_email": "hayoung.yoon@lgchem.com",
+    "member_name": "윤하영",
+    "content": "유관 부서 인터뷰(3개 팀) 완료. 공통 문제: 중복 입력, 코드 불일치.",
+    "created_at": "2026-03-31 16:00:00"
+  },
+  {
+    "id": 19,
+    "item_id": 4,
+    "member_email": "hayoung.yoon@lgchem.com",
+    "member_name": "윤하영",
+    "content": "데이터 품질 지표 KPI 정의 완료. 월별 측정 계획 수립.",
+    "created_at": "2026-04-02 16:00:00"
+  },
+  {
+    "id": 20,
+    "item_id": 4,
+    "member_email": "sumin.jung@lgchem.com",
+    "member_name": "정수민",
+    "content": "자동 검증 스크립트 초안 작성. Python pandas 활용.",
+    "created_at": "2026-04-03 14:00:00"
+  },
+  {
+    "id": 21,
+    "item_id": 5,
+    "member_email": "hayoung.yoon@lgchem.com",
+    "member_name": "윤하영",
+    "content": "이해관계자 미팅. 자동화 대상 대시보드 10개 선정.",
+    "created_at": "2026-03-30 11:00:00"
+  },
+  {
+    "id": 22,
+    "item_id": 5,
+    "member_email": "sumin.jung@lgchem.com",
+    "member_name": "정수민",
+    "content": "Power BI vs Tableau 검토 완료. Power BI 선정 (기존 MS 인프라 활용).",
+    "created_at": "2026-04-01 16:00:00"
+  },
+  {
+    "id": 23,
+    "item_id": 6,
+    "member_email": "jiwon.han@lgchem.com",
+    "member_name": "한지원",
+    "content": "현행 시스템 도메인 분석 완료. 8개 도메인으로 분리 가능 확인.",
+    "created_at": "2026-03-28 10:00:00"
+  },
+  {
+    "id": 24,
+    "item_id": 6,
+    "member_email": "taeyang.oh@lgchem.com",
+    "member_name": "오태양",
+    "content": "1단계 전환 대상: 사용자 인증 서비스 선정. JWT 기반 인증 모듈 설계.",
+    "created_at": "2026-03-29 10:00:00"
+  },
+  {
+    "id": 25,
+    "item_id": 6,
+    "member_email": "jiwon.han@lgchem.com",
+    "member_name": "한지원",
+    "content": "인증 마이크로서비스 개발 완료. 단위 테스트 통과.",
+    "created_at": "2026-03-31 14:00:00"
+  },
+  {
+    "id": 26,
+    "item_id": 6,
+    "member_email": "taeyang.oh@lgchem.com",
+    "member_name": "오태양",
+    "content": "API Gateway 구성(Kong) 완료. 라우팅 및 인증 미들웨어 통합.",
+    "created_at": "2026-04-01 10:00:00"
+  },
+  {
+    "id": 27,
+    "item_id": 6,
+    "member_email": "jiwon.han@lgchem.com",
+    "member_name": "한지원",
+    "content": "통합 테스트 진행 중. 레거시와 신규 서비스 간 데이터 정합성 확인 작업.",
+    "created_at": "2026-04-03 09:00:00"
+  }
+]

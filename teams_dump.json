@@ -1,0 +1,42 @@
+[
+  {
+    "id": 1,
+    "division_id": 1,
+    "name": "경영혁신AX팀",
+    "leader_name": "김은용",
+    "leader_position": "책임",
+    "leader_email": "kimeunyong@lgchem.com"
+  },
+  {
+    "id": 2,
+    "division_id": 1,
+    "name": "경영일반PI팀",
+    "leader_name": "김재구",
+    "leader_position": "책임",
+    "leader_email": "infotech@lgchem.com"
+  },
+  {
+    "id": 5,
+    "division_id": 1,
+    "name": "AI솔루션팀",
+    "leader_name": "김민준",
+    "leader_position": "책임",
+    "leader_email": "minjun.kim@lgchem.com"
+  },
+  {
+    "id": 6,
+    "division_id": 1,
+    "name": "데이터분석팀",
+    "leader_name": "이서연",
+    "leader_position": "선임",
+    "leader_email": "seoyeon.lee@lgchem.com"
+  },
+  {
+    "id": 7,
+    "division_id": 1,
+    "name": "플랫폼개발팀",
+    "leader_name": "박지훈",
+    "leader_position": "사원",
+    "leader_email": "jihoon.park@lgchem.com"
+  }
+]

@@ -1,0 +1,58 @@
+[
+  {
+    "id": 1,
+    "team_id": 1,
+    "name": "오승환",
+    "position": "책임",
+    "email": "oshznim@lgchem.com"
+  },
+  {
+    "id": 6,
+    "team_id": 1,
+    "name": "손주희",
+    "position": "선임",
+    "email": "jooheuison@lgchem.com"
+  },
+  {
+    "id": 7,
+    "team_id": 5,
+    "name": "최유진",
+    "position": "선임",
+    "email": "yujin.choi@lgchem.com"
+  },
+  {
+    "id": 9,
+    "team_id": 6,
+    "name": "윤하영",
+    "position": "책임",
+    "email": "hayoung.yoon@lgchem.com"
+  },
+  {
+    "id": 10,
+    "team_id": 6,
+    "name": "정수민",
+    "position": "사원",
+    "email": "sumin.jung@lgchem.com"
+  },
+  {
+    "id": 11,
+    "team_id": 7,
+    "name": "한지원",
+    "position": "선임",
+    "email": "jiwon.han@lgchem.com"
+  },
+  {
+    "id": 12,
+    "team_id": 7,
+    "name": "오태양",
+    "position": "사원",
+    "email": "taeyang.oh@lgchem.com"
+  },
+  {
+    "id": 13,
+    "team_id": 2,
+    "name": "배민규",
+    "position": "책임",
+    "email": "mkbae@lgchem.com"
+  }
+]

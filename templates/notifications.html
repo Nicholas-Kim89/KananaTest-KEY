@@ -1,0 +1,422 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+/* ── 알림 페이지 전용 ── */
+.notif-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+.notif-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-primary);
+}
+.notif-title .bell-icon {
+    width: 40px; height: 40px;
+    background: linear-gradient(135deg, var(--primary-color), #8b5cf6);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 1rem;
+}
+.notif-unread-badge {
+    background: linear-gradient(135deg, #ef4444, #f97316);
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 700;
+    border-radius: 999px;
+    padding: 2px 8px;
+    letter-spacing: 0.02em;
+}
+.notif-header-actions { display: flex; align-items: center; gap: 10px; }
+.btn-read-all {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: linear-gradient(135deg, var(--primary-color), #8b5cf6);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 9px 20px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity .18s, transform .15s;
+}
+.btn-read-all:hover { opacity: .88; transform: translateY(-1px); }
+.btn-read-all:disabled { opacity: .4; cursor: default; transform: none; }
+
+/* 총 건수 표시 */
+.notif-total-info {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    margin-bottom: 14px;
+}
+
+/* 알림 카드 */
+.notif-list { display: flex; flex-direction: column; gap: 10px; }
+.notif-card {
+    background: var(--card-bg);
+    border: 1.5px solid var(--border-color);
+    border-radius: 14px;
+    padding: 15px 18px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    cursor: pointer;
+    transition: background .15s, border-color .15s, transform .15s, box-shadow .15s;
+    position: relative;
+}
+.notif-card:hover {
+    background: var(--hover-bg);
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(var(--primary-rgb), .12);
+}
+.notif-card.unread {
+    border-left: 4px solid var(--primary-color);
+}
+.notif-dot {
+    position: absolute;
+    top: 18px; left: 14px;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(var(--primary-rgb), .18);
+    display: none;
+}
+.notif-card.unread .notif-dot { display: block; }
+.notif-card.unread .notif-icon-wrap { margin-left: 12px; }
+.notif-card.read { opacity: .7; }
+
+.notif-icon-wrap {
+    width: 38px; height: 38px; min-width: 38px;
+    border-radius: 11px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.95rem;
+}
+.notif-icon-wrap.type-log { background: rgba(59,130,246,.15); color: #3b82f6; }
+.notif-icon-wrap.type-comment { background: rgba(139,92,246,.15); color: #8b5cf6; }
+
+.notif-body { flex: 1; min-width: 0; }
+.notif-meta {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin-bottom: 3px;
+    flex-wrap: wrap;
+}
+.notif-type-badge {
+    font-size: 0.7rem; font-weight: 700;
+    border-radius: 6px; padding: 2px 7px;
+}
+.notif-type-badge.log  { background: rgba(59,130,246,.12); color: #3b82f6; }
+.notif-type-badge.comment { background: rgba(139,92,246,.12); color: #8b5cf6; }
+.notif-team {
+    font-size: 0.72rem; color: var(--text-muted);
+    background: var(--bg-secondary); border-radius: 5px; padding: 2px 7px;
+}
+.notif-item-title {
+    font-size: 0.79rem; font-weight: 600; color: var(--text-secondary);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px;
+}
+.notif-author { font-size: 0.82rem; font-weight: 600; color: var(--text-primary); }
+.notif-content {
+    font-size: 0.88rem; color: var(--text-primary);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    margin-top: 2px; line-height: 1.5;
+}
+.notif-time { font-size: 0.74rem; color: var(--text-muted); margin-top: 5px; }
+
+/* ── 페이지네이션 ── */
+.pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    margin-top: 28px;
+    flex-wrap: wrap;
+}
+.page-btn {
+    min-width: 36px; height: 36px;
+    border: 1.5px solid var(--border-color);
+    border-radius: 9px;
+    background: var(--card-bg);
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    padding: 0 10px;
+    transition: all .15s;
+}
+.page-btn:hover:not(:disabled) {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    background: var(--hover-bg);
+}
+.page-btn.active {
+    background: linear-gradient(135deg, var(--primary-color), #8b5cf6);
+    color: #fff;
+    border-color: transparent;
+    font-weight: 700;
+}
+.page-btn:disabled { opacity: .35; cursor: default; }
+.page-ellipsis {
+    color: var(--text-muted); font-size: .85rem; padding: 0 4px; line-height: 36px;
+}
+
+/* 스켈레톤 */
+.skeleton {
+    background: linear-gradient(90deg, var(--border-color) 25%, var(--hover-bg) 50%, var(--border-color) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s infinite;
+    border-radius: 8px;
+}
+@keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+.skeleton-card {
+    background: var(--card-bg); border: 1.5px solid var(--border-color);
+    border-radius: 14px; padding: 16px 18px;
+    display: flex; gap: 14px; align-items: center;
+}
+.notif-empty {
+    text-align: center; padding: 64px 0; color: var(--text-muted);
+}
+.notif-empty i { font-size: 3rem; margin-bottom: 16px; opacity: .35; display: block; }
+</style>
+
+<div class="notif-header">
+    <div class="notif-title">
+        <div class="bell-icon"><i class="fa-solid fa-bell"></i></div>
+        알림
+        <span class="notif-unread-badge" id="headerUnreadBadge" style="display:none">0</span>
+    </div>
+    <div class="notif-header-actions">
+        <span id="totalInfo" style="font-size:.82rem;color:var(--text-muted);"></span>
+        <button class="btn-read-all" id="readAllBtn" disabled>
+            <i class="fa-solid fa-check-double"></i> 모두 확인
+        </button>
+    </div>
+</div>
+
+<!-- 스켈레톤 -->
+<div id="skeletonList">
+    {% for _ in range(5) %}
+    <div class="skeleton-card">
+        <div class="skeleton" style="width:38px;height:38px;border-radius:11px;flex-shrink:0;"></div>
+        <div style="flex:1;display:flex;flex-direction:column;gap:7px;">
+            <div class="skeleton" style="height:13px;width:55%;"></div>
+            <div class="skeleton" style="height:12px;width:80%;"></div>
+            <div class="skeleton" style="height:11px;width:25%;"></div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="notif-list" id="notifList" style="display:none;"></div>
+<div class="notif-empty" id="notifEmpty" style="display:none;">
+    <i class="fa-solid fa-bell-slash"></i>
+    <p>새로운 알림이 없습니다.</p>
+</div>
+<div class="pagination" id="pagination" style="display:none;"></div>
+
+<script>
+(function () {
+    const listEl     = document.getElementById('notifList');
+    const emptyEl    = document.getElementById('notifEmpty');
+    const skelEl     = document.getElementById('skeletonList');
+    const readAllBtn = document.getElementById('readAllBtn');
+    const headerBadge = document.getElementById('headerUnreadBadge');
+    const paginationEl = document.getElementById('pagination');
+    const totalInfoEl  = document.getElementById('totalInfo');
+
+    const PER_PAGE = 10;
+    let currentPage  = 1;
+    let totalPages   = 1;
+    let totalCount   = 0;
+    let unreadCount  = 0;
+    // 클라이언트 측 읽음 상태 캐시 (ref_type+ref_id → true)
+    let readCache = new Set();
+
+    function timeAgo(str) {
+        const dt = new Date(str.replace(' ', 'T'));
+        const s  = Math.floor((Date.now() - dt.getTime()) / 1000);
+        if (s < 60)   return '방금 전';
+        if (s < 3600) return `${Math.floor(s/60)}분 전`;
+        if (s < 86400) return `${Math.floor(s/3600)}시간 전`;
+        return `${Math.floor(s/86400)}일 전`;
+    }
+
+    function updateBadge() {
+        if (unreadCount > 0) {
+            headerBadge.textContent = unreadCount;
+            headerBadge.style.display = '';
+            readAllBtn.disabled = false;
+        } else {
+            headerBadge.style.display = 'none';
+            readAllBtn.disabled = true;
+        }
+        const sb = document.getElementById('sidebarNotifBadge');
+        if (sb) {
+            if (unreadCount > 0) { sb.textContent = unreadCount; sb.style.display = ''; }
+            else sb.style.display = 'none';
+        }
+    }
+
+    function renderCard(n) {
+        const cacheKey = `${n.type}-${n.ref_id}`;
+        const isRead = n.is_read || readCache.has(cacheKey);
+
+        const card = document.createElement('div');
+        card.className = `notif-card ${isRead ? 'read' : 'unread'}`;
+
+        const iconClass = n.type === 'log' ? 'type-log' : 'type-comment';
+        const iconFA    = n.type === 'log' ? 'fa-pen-to-square' : 'fa-comment';
+        const typeLabel = n.type === 'log' ? '진척 로그' : '댓글';
+
+        card.innerHTML = `
+            <div class="notif-dot"></div>
+            <div class="notif-icon-wrap ${iconClass}">
+                <i class="fa-solid ${iconFA}"></i>
+            </div>
+            <div class="notif-body">
+                <div class="notif-meta">
+                    <span class="notif-type-badge ${n.type}">${typeLabel}</span>
+                    <span class="notif-team">${n.team_name || ''}</span>
+                    <span class="notif-item-title" title="${n.item_title}">${n.item_title}</span>
+                </div>
+                <div style="margin-top:3px;">
+                    <span class="notif-author">${n.author}</span>
+                    <span style="color:var(--text-muted);font-size:.8rem;"> 님이 글을 남겼습니다</span>
+                </div>
+                <div class="notif-content">${n.content}</div>
+                <div class="notif-time"><i class="fa-regular fa-clock" style="font-size:.68rem;"></i> ${timeAgo(n.created_at)}</div>
+            </div>
+        `;
+
+        card.addEventListener('click', async () => {
+            if (!isRead && !readCache.has(cacheKey)) {
+                await fetch(`/api/notifications/read/${n.type}/${n.ref_id}`, { method: 'POST' });
+                readCache.add(cacheKey);
+                card.classList.remove('unread');
+                card.classList.add('read');
+                card.querySelector('.notif-dot').style.display = 'none';
+                if (unreadCount > 0) { unreadCount--; updateBadge(); }
+            }
+            window.location.href = '/progress';
+        });
+        return card;
+    }
+
+    function renderPagination() {
+        paginationEl.innerHTML = '';
+        if (totalPages <= 1) { paginationEl.style.display = 'none'; return; }
+        paginationEl.style.display = '';
+
+        const makeBtn = (label, page, isActive = false, disabled = false) => {
+            const btn = document.createElement('button');
+            btn.className = 'page-btn' + (isActive ? ' active' : '');
+            btn.innerHTML = label;
+            btn.disabled = disabled;
+            if (!disabled && !isActive) btn.addEventListener('click', () => loadPage(page));
+            return btn;
+        };
+
+        // 이전
+        paginationEl.appendChild(makeBtn('<i class="fa-solid fa-chevron-left"></i>', currentPage - 1, false, currentPage === 1));
+
+        // 페이지 번호 (최대 7개 표시)
+        const maxShow = 7;
+        let pages = [];
+        if (totalPages <= maxShow) {
+            pages = Array.from({length: totalPages}, (_, i) => i + 1);
+        } else {
+            pages = [1];
+            let start = Math.max(2, currentPage - 2);
+            let end   = Math.min(totalPages - 1, currentPage + 2);
+            if (start > 2) pages.push('…');
+            for (let p = start; p <= end; p++) pages.push(p);
+            if (end < totalPages - 1) pages.push('…');
+            pages.push(totalPages);
+        }
+
+        pages.forEach(p => {
+            if (p === '…') {
+                const el = document.createElement('span');
+                el.className = 'page-ellipsis';
+                el.textContent = '…';
+                paginationEl.appendChild(el);
+            } else {
+                paginationEl.appendChild(makeBtn(p, p, p === currentPage));
+            }
+        });
+
+        // 다음
+        paginationEl.appendChild(makeBtn('<i class="fa-solid fa-chevron-right"></i>', currentPage + 1, false, currentPage === totalPages));
+    }
+
+    async function loadPage(page) {
+        currentPage = page;
+        skelEl.style.display = '';
+        listEl.style.display = 'none';
+        paginationEl.style.display = 'none';
+        emptyEl.style.display   = 'none';
+
+        const res  = await fetch(`/api/notifications?page=${page}&per_page=${PER_PAGE}`);
+        const data = await res.json();
+
+        unreadCount = data.unread_count;
+        totalCount  = data.total_count;
+        totalPages  = data.total_pages;
+        currentPage = data.page;
+
+        skelEl.style.display = 'none';
+
+        // 총 건수 정보
+        totalInfoEl.textContent = totalCount > 0
+            ? `전체 ${totalCount}건 (미확인 ${unreadCount}건) · ${currentPage}/${totalPages} 페이지`
+            : '';
+
+        if (!data.items || data.items.length === 0) {
+            emptyEl.style.display = '';
+            paginationEl.style.display = 'none';
+            updateBadge();
+            return;
+        }
+
+        listEl.style.display = '';
+        listEl.innerHTML = '';
+        data.items.forEach(n => listEl.appendChild(renderCard(n)));
+
+        renderPagination();
+        updateBadge();
+
+        // 페이지 변경 시 맨 위로 스크롤
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    readAllBtn.addEventListener('click', async () => {
+        readAllBtn.disabled = true;
+        await fetch('/api/notifications/read-all', { method: 'POST' });
+        unreadCount = 0;
+        // 현재 페이지 카드 모두 읽음 처리
+        listEl.querySelectorAll('.notif-card.unread').forEach(c => {
+            c.classList.remove('unread'); c.classList.add('read');
+            const dot = c.querySelector('.notif-dot');
+            if (dot) dot.style.display = 'none';
+        });
+        totalInfoEl.textContent = totalInfoEl.textContent.replace(/미확인 \d+건/, '미확인 0건');
+        updateBadge();
+    });
+
+    // 초기 로드
+    loadPage(1);
+})();
+</script>
+{% endblock %}
