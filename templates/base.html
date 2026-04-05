@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ title|default("Nexus AI - 업무 진척 관리") }}</title>
+    <title>{{ title|default("Velo AI - 업무 진척 관리") }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -12,7 +12,7 @@
     <aside class="sidebar">
         <div class="sidebar-header">
             <a href="{{ url_for('index') }}" class="logo">
-                <i class="fa-solid fa-sparkles"></i> <span class="nav-text">Nexus AI</span>
+                <i class="fa-solid fa-sparkles"></i> <span class="nav-text">Velo AI</span>
             </a>
         </div>
         <ul class="nav-menu">
@@ -61,7 +61,7 @@
                     <i class="fa-solid fa-bars"></i>
                 </button>
                 <div class="header-breadcrumb">
-                    <span style="color: var(--text-muted);">Nexus AI / </span>
+                    <span style="color: var(--text-muted);">Velo AI / </span>
                     <span style="font-weight: 500;">{{ title|default("대시보드") }}</span>
                 </div>
             </div>

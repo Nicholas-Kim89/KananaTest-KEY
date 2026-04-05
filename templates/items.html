@@ -419,6 +419,10 @@ textarea.form-control { resize: vertical; min-height: 80px; }
                         {% endif %}
                     </div>
                 </div>
+                <div class="form-group">
+                    <label>기타</label>
+                    <input type="text" name="extra_note" class="form-control" value="{{ item.extra_note or '' }}" placeholder="Ex) KI, OKR 등">
+                </div>
                 <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px;">
                     <button type="button" class="btn-secondary" onclick="toggleEditForm({{ item.id }})">취소</button>
                     <button type="submit" class="primary-btn"><i class="fa-solid fa-floppy-disk"></i> 저장</button>
@@ -499,6 +503,10 @@ textarea.form-control { resize: vertical; min-height: 80px; }
                     {% endif %}
                     {% endif %}
                 </div>
+            </div>
+            <div class="form-group">
+                <label>기타</label>
+                <input type="text" name="extra_note" class="form-control" placeholder="Ex) KI, OKR 등">
             </div>
             <div class="modal-actions">
                 <button type="button" class="btn-secondary" onclick="closeAddModal()">취소</button>

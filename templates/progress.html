@@ -336,6 +336,47 @@
 }
 .del-modal-overlay.active { display: flex; }
 .del-modal { background: white; border-radius: 12px; padding: 28px 28px 22px; max-width: 340px; width: 90%; text-align: center; }
+
+/* 이슈 플래그 체크박스 */
+.flag-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    padding: 3px 10px;
+    border-radius: 16px;
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: #aaa;
+    background: #f5f5f5;
+    border: 1px solid #e0e0e0;
+    transition: all 0.2s ease;
+    user-select: none;
+    white-space: nowrap;
+}
+.flag-toggle:hover {
+    background: #fff3e0;
+    border-color: #ffb74d;
+    color: #e65100;
+}
+.flag-toggle.active {
+    background: linear-gradient(135deg, #fff8e1, #fff3e0);
+    border-color: #f57c00;
+    color: #e65100;
+}
+.flag-toggle input[type="checkbox"] {
+    accent-color: #f57c00;
+    width: 14px;
+    height: 14px;
+    margin: 0;
+    cursor: pointer;
+}
+.log-card.flagged {
+    border-left: 3px solid #f57c00;
+}
+.log-card.flagged .log-card-header {
+    background: linear-gradient(135deg, #fff8e1 0%, #fffde7 100%);
+}
 </style>
 
 <div class="progress-header">
@@ -445,7 +486,7 @@
                 {% for entry in member_logs %}
                 {% set log = entry.log %}
                 {% set ctree = entry.comment_tree %}
-                <div class="log-card" id="log-{{ log.id }}">
+                <div class="log-card {{ 'flagged' if log.is_flagged else '' }}" id="log-{{ log.id }}">
                     <div class="log-card-header">
                         <div class="log-author">
                             <div class="log-avatar">{{ log.member_name[0] }}</div>
@@ -454,8 +495,13 @@
                                 <div class="log-date">{{ log.created_at[:16] }}</div>
                             </div>
                         </div>
-                        {% if log.member_email == user_email %}
                         <div class="log-action-btns">
+                            <label class="flag-toggle {{ 'active' if log.is_flagged else '' }}" id="flag-label-{{ log.id }}" title="이 코멘트를 주요 이슈로 표시">
+                                <input type="checkbox" {{ 'checked' if log.is_flagged else '' }}
+                                       onchange="toggleFlag({{ log.id }})">
+                                주요 이슈
+                            </label>
+                            {% if log.member_email == user_email %}
                             <button type="button" class="log-edit-btn" title="수정"
                                     onclick="toggleLogEdit({{ log.id }})">
                                 <i class="fa-solid fa-pen"></i>
@@ -464,8 +510,8 @@
                                     onclick="confirmDeleteLog({{ log.id }})">
                                 <i class="fa-solid fa-trash-can"></i>
                             </button>
+                            {% endif %}
                         </div>
-                        {% endif %}
                     </div>
                     <div class="log-content" id="log-content-{{ log.id }}">{{ log.content }}{% if log.updated_at %}<span class="edited-mark">(수정됨 {{ log.updated_at[:16] }})</span>{% endif %}</div>
                     <!-- 인라인 수정 폼 -->
@@ -627,6 +673,31 @@ function showToast(msg, isError) {
     t.textContent = msg;
     t.className = 'toast' + (isError ? ' error' : '') + ' show';
     setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// 이슈 플래그 토글
+async function toggleFlag(logId) {
+    try {
+        const res = await fetch('/api/toggle-flag/' + logId, { method: 'POST', credentials: 'same-origin' });
+        const data = await res.json();
+        if (data.ok) {
+            const card = document.getElementById('log-' + logId);
+            const label = document.getElementById('flag-label-' + logId);
+            if (data.is_flagged) {
+                card.classList.add('flagged');
+                label.classList.add('active');
+            } else {
+                card.classList.remove('flagged');
+                label.classList.remove('active');
+            }
+            showToast(data.is_flagged ? '주요 이슈로 설정되었습니다.' : '주요 이슈 해제되었습니다.');
+        } else {
+            showToast('이슈 설정 실패', true);
+        }
+    } catch (e) {
+        console.error('Flag toggle error:', e);
+        showToast('네트워크 오류', true);
+    }
 }
 
 // ── 진첩 로그 수정 ──

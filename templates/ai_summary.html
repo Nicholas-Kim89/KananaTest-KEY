@@ -287,6 +287,44 @@
     font-size: .72rem; font-weight: 600; color: var(--primary-color);
 }
 .team-group-wrap { display: flex; flex-direction: column; gap: 12px; }
+
+/* 이슈 강조 스타일 */
+.summary-bullets li.flagged-bullet {
+    background: rgba(255, 193, 7, 0.15);
+    border-left: 3px solid #f59e0b;
+    padding-left: 10px;
+    border-radius: 0 6px 6px 0;
+    font-weight: 600;
+}
+.summary-bullets li.flagged-bullet .bullet-dot {
+    background: #f57c00;
+}
+.flag-issue-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 1px 7px;
+    background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+    border: 1px solid #ffb74d;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #e65100;
+    margin-right: 5px;
+    white-space: nowrap;
+}
+.source-flag-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 1px 7px;
+    background: #fff3e0;
+    border: 1px solid #ffcc80;
+    border-radius: 8px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: #e65100;
+}
 </style>
 
 <div class="summary-page">
@@ -722,7 +760,13 @@ function buildItemCard(item, bullets) {
 
     const bulletsHtml = bullets.length
         ? '<ul class="summary-bullets">' +
-          bullets.map(b => `<li><span class="bullet-dot"></span><span>${escHtml(b)}</span></li>`).join('') +
+          bullets.map(b => {
+              const isFlagged = b.startsWith('[주요 이슈]');
+              const text = isFlagged ? b.replace('[주요 이슈]', '').trim() : b;
+              const flagTag = isFlagged ? '<span class="flag-issue-tag">주요 이슈</span>' : '';
+              const liClass = isFlagged ? ' class="flagged-bullet"' : '';
+              return `<li${liClass}><span class="bullet-dot"></span><span>${flagTag}${escHtml(text)}</span></li>`;
+          }).join('') +
           '</ul>'
         : '<span style="color:var(--text-muted);font-size:.88rem;">요약 내용을 생성하지 못했습니다.</span>';
 
@@ -783,15 +827,20 @@ function buildItemCard(item, bullets) {
                   '</div>'
                 : '';
 
+            const flagBadge = src.is_flagged
+                ? '<span class="source-flag-badge">주요 이슈</span>'
+                : '';
+
             entry.innerHTML = `
                 <div class="source-timeline">
-                    <div class="timeline-dot"></div>
+                    <div class="timeline-dot"${src.is_flagged ? ' style="background:#f57c00;"' : ''}></div>
                     ${!isLast ? '<div class="timeline-line"></div>' : ''}
                 </div>
                 <div class="source-body">
                     <div class="source-meta">
                         <span class="source-author"><i class="fa-solid fa-user"></i> ${escHtml(src.author)}</span>
                         <span class="source-date">${escHtml(src.date)}</span>
+                        ${flagBadge}
                     </div>
                     <div class="source-content">${escHtml(src.content)}</div>
                     ${commentsHtml}

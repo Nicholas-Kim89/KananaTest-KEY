@@ -394,16 +394,19 @@ def api_ai_summary():
                 'logs':     []
             }
         log_comments = [c for c in comments if c['progress_id'] == log['id']]
+        is_flagged = log['is_flagged'] if 'is_flagged' in log.keys() else 0
         items_data[iid]['sources'].append({
             'date':     log['created_at'][:16],
             'author':   log['member_name'],
             'content':  log['content'],
+            'is_flagged': is_flagged,
             'comments': [{'author': c['author_name'], 'date': c['created_at'][:16],
                           'text': c['content']} for c in log_comments]
         })
         items_for_prompt[iid]['logs'].append({
             'date':     log['created_at'][:10],
             'content':  log['content'],
+            'is_flagged': is_flagged,
             'comments': [c['content'] for c in log_comments]
         })
 
@@ -424,11 +427,12 @@ def api_ai_summary():
 - 마감일이 있는 진행 중 항목은 끝에 (~마감일) 형태로 기재하세요. 예: `- RAG 파이프라인 초안 설계 중. (~2026-05-04)`
 - 이름(사람)은 절대 포함하지 마세요.
 - 모든 팀원의 진척을 합쳐서 하나의 흐름으로 요약하세요.
+- 데이터에 "is_flagged": 1인 로그는 "주요 이슈"로 표시된 중요 항목입니다. 이 로그의 내용이 요약에 반영될 때, 해당 항목 앞에 [주요 이슈] 태그를 반드시 붙여서 작성하세요.
 - 출력 형식:
 
 ## [status] 아이템 제목 (마감일: due_date)
 - 항목1
-- 항목2
+- [주요 이슈] 항목2 (이슈 플래그된 로그 기반일 경우)
 - 항목3
 - 항목4 (있을 경우)
 """
@@ -932,12 +936,13 @@ def add_item():
     description = request.form.get('description', '')
     status = request.form.get('status', '계획')
     due_date = request.form.get('due_date', '')
+    extra_note = request.form.get('extra_note', '')
 
     if team_id and title:
         conn = get_db_connection()
         cursor = conn.execute(
-            'INSERT INTO items (team_id, title, subtitle, description, status, due_date, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)',
-            (team_id, title, subtitle, description, status, due_date, session.get('name'))
+            'INSERT INTO items (team_id, title, subtitle, description, status, due_date, created_by, extra_note) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            (team_id, title, subtitle, description, status, due_date, session.get('name'), extra_note)
         )
         item_id = cursor.lastrowid
 
@@ -972,11 +977,12 @@ def edit_item(item_id):
     description = request.form.get('description', '')
     status = request.form.get('status', '계획')
     due_date = request.form.get('due_date', '')
+    extra_note = request.form.get('extra_note', '')
 
     conn = get_db_connection()
     conn.execute(
-        'UPDATE items SET title=?, subtitle=?, description=?, status=?, due_date=? WHERE id=?',
-        (title, subtitle, description, status, due_date, item_id)
+        'UPDATE items SET title=?, subtitle=?, description=?, status=?, due_date=?, extra_note=? WHERE id=?',
+        (title, subtitle, description, status, due_date, extra_note, item_id)
     )
 
     # 팀원 재배정
@@ -1122,8 +1128,10 @@ def progress():
                     'SELECT * FROM comments WHERE parent_id = ? ORDER BY created_at ASC', (c['id'],)
                 ).fetchall()
                 comment_tree.append({'comment': dict(c), 'replies': [dict(r) for r in replies]})
+            log_dict = dict(log)
+            log_dict['is_flagged'] = log.get('is_flagged', 0) if hasattr(log, 'get') else (log['is_flagged'] if 'is_flagged' in log.keys() else 0)
             data['logs_by_member'][mem_email].append({
-                'log': dict(log),
+                'log': log_dict,
                 'comment_tree': comment_tree
             })
 
@@ -1282,6 +1290,23 @@ def delete_comment(comment_id):
     conn.commit()
     conn.close()
     return jsonify({'ok': True})
+
+
+@app.route('/api/toggle-flag/<int:log_id>', methods=['POST'])
+@login_required
+def toggle_flag(log_id):
+    """진척 로그의 주요 이슈 플래그 토글 (모든 역할 가능)"""
+    conn = get_db_connection()
+    log = conn.execute('SELECT * FROM progress_logs WHERE id = ?', (log_id,)).fetchone()
+    if not log:
+        conn.close()
+        return jsonify({'ok': False, 'error': 'not_found'}), 404
+    current = log['is_flagged'] if 'is_flagged' in log.keys() else 0
+    new_val = 0 if current else 1
+    conn.execute('UPDATE progress_logs SET is_flagged = ? WHERE id = ?', (new_val, log_id))
+    conn.commit()
+    conn.close()
+    return jsonify({'ok': True, 'is_flagged': new_val})
 
 
 
