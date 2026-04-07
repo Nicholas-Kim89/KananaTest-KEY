@@ -7,7 +7,8 @@ DB_PATH = 'workprogress.db'
 
 def init_db():
     # 데이터베이스 파일이 이미 존재하면 연결
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(DB_PATH, timeout=10)
+    conn.execute("PRAGMA journal_mode=WAL;")
     cursor = conn.cursor()
 
     # schema.sql 읽기
@@ -61,7 +62,8 @@ def init_db():
     print("초기 데이터 구축 완료!")
 
 def get_db_connection():
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(DB_PATH, timeout=10)
+    conn.execute("PRAGMA journal_mode=WAL;")
     conn.row_factory = sqlite3.Row
     return conn
 
