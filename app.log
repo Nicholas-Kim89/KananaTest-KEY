@@ -1,0 +1,13 @@
+RAG ChromaDB 데이터를 동기화합니다...
+/home/jules/.cache/chroma/onnx_models/all-MiniLM-L6-v2/onnx.tar.gz:   0%|          | 0.00/79.3M [00:00<?, ?iB/s]/home/jules/.cache/chroma/onnx_models/all-MiniLM-L6-v2/onnx.tar.gz:   0%|          | 170k/79.3M [00:00<00:50, 1.64MiB/s]/home/jules/.cache/chroma/onnx_models/all-MiniLM-L6-v2/onnx.tar.gz:   3%|▎         | 2.42M/79.3M [00:00<00:06, 13.4MiB/s]/home/jules/.cache/chroma/onnx_models/all-MiniLM-L6-v2/onnx.tar.gz:  13%|█▎        | 10.6M/79.3M [00:00<00:01, 42.6MiB/s]/home/jules/.cache/chroma/onnx_models/all-MiniLM-L6-v2/onnx.tar.gz:  23%|██▎       | 18.0M/79.3M [00:00<00:01, 53.2MiB/s]/home/jules/.cache/chroma/onnx_models/all-MiniLM-L6-v2/onnx.tar.gz:  32%|███▏      | 25.5M/79.3M [00:00<00:00, 58.9MiB/s]/home/jules/.cache/chroma/onnx_models/all-MiniLM-L6-v2/onnx.tar.gz:  41%|████      | 32.5M/79.3M [00:00<00:00, 60.5MiB/s]/home/jules/.cache/chroma/onnx_models/all-MiniLM-L6-v2/onnx.tar.gz:  48%|████▊     | 38.4M/79.3M [00:00<00:00, 58.6MiB/s]/home/jules/.cache/chroma/onnx_models/all-MiniLM-L6-v2/onnx.tar.gz:  58%|█████▊    | 46.0M/79.3M [00:00<00:00, 62.3MiB/s]/home/jules/.cache/chroma/onnx_models/all-MiniLM-L6-v2/onnx.tar.gz:  67%|██████▋   | 53.4M/79.3M [00:01<00:00, 64.1MiB/s]/home/jules/.cache/chroma/onnx_models/all-MiniLM-L6-v2/onnx.tar.gz:  77%|███████▋  | 60.8M/79.3M [00:01<00:00, 65.2MiB/s]/home/jules/.cache/chroma/onnx_models/all-MiniLM-L6-v2/onnx.tar.gz:  86%|████████▌ | 68.3M/79.3M [00:01<00:00, 67.3MiB/s]/home/jules/.cache/chroma/onnx_models/all-MiniLM-L6-v2/onnx.tar.gz:  96%|█████████▌| 75.9M/79.3M [00:01<00:00, 67.9MiB/s]/home/jules/.cache/chroma/onnx_models/all-MiniLM-L6-v2/onnx.tar.gz: 100%|██████████| 79.3M/79.3M [00:01<00:00, 59.9MiB/s]
+RAG 동기화 완료!
+ * Serving Flask app 'app'
+ * Debug mode: on
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+[33mPress CTRL+C to quit[0m
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 123-396-847
+127.0.0.1 - - [07/Apr/2026 13:40:48] "[32mPOST /api/chat HTTP/1.1[0m" 302 -
+127.0.0.1 - - [07/Apr/2026 13:40:48] "GET /login HTTP/1.1" 200 -
